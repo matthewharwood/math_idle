@@ -114,8 +114,11 @@ function setupCardSwapListeners() {
   
   // Listen for winning event
   container.addEventListener('containerWon', async (event) => {
-    const { values, sortOrder } = event.detail;
+    const { values, sortOrder, containerElement } = event.detail;
     console.log(`Container won! Order: ${sortOrder}, Values: ${values}`);
+    
+    // Start coin animation immediately
+    animateCoinsToToolbar(values, containerElement);
     
     // Handle win (deals damage to enemy)
     const result = await gameManager.handleWin();
@@ -322,6 +325,109 @@ function animateCoinsIncrement(targetCoins) {
   };
   
   animate();
+}
+
+// Coin animation functions (moved from CardContainer to avoid clipping issues)
+function animateCoinsToToolbar(values, containerElement) {
+  // Calculate total coins earned from card values
+  const totalCoins = values.reduce((sum, value) => sum + value, 0);
+  const coinCount = Math.min(8, Math.max(3, Math.floor(totalCoins / 5))); // 3-8 coins based on total
+  
+  // Get positions
+  const containerRect = containerElement.getBoundingClientRect();
+  let coinsDisplay = document.getElementById('coins-display');
+  
+  // If coins-display not found, try targeting the coins element directly
+  if (!coinsDisplay) {
+    coinsDisplay = document.getElementById('coins');
+    if (!coinsDisplay) {
+      console.error('Neither coins-display nor coins element found!');
+      return;
+    }
+  }
+  
+  const targetRect = coinsDisplay.getBoundingClientRect();
+  
+  // Log the target element for debugging
+  console.log('Target element:', coinsDisplay.id, 'at position:', targetRect);
+  
+  // Calculate center points
+  const startX = containerRect.left + containerRect.width / 2;
+  const startY = containerRect.top + containerRect.height / 2;
+  const endX = targetRect.left + targetRect.width / 2;
+  const endY = targetRect.top + targetRect.height / 2;
+  
+  console.log(`Coin animation: from (${startX}, ${startY}) to (${endX}, ${endY})`);
+  
+  // Create and animate coins
+  for (let i = 0; i < coinCount; i++) {
+    setTimeout(() => {
+      createAnimatedCoin(startX, startY, endX, endY, i);
+    }, i * 100); // Stagger coin creation
+  }
+}
+
+function createAnimatedCoin(startX, startY, endX, endY, index) {
+  // Create coin element
+  const coin = document.createElement('div');
+  coin.className = 'animated-coin';
+  coin.textContent = '🪙';
+  
+  // Add random spread at start
+  const spread = 40;
+  const randomX = startX + (Math.random() - 0.5) * spread;
+  const randomY = startY + (Math.random() - 0.5) * spread;
+  
+  coin.style.cssText = `
+    position: fixed;
+    font-size: 24px;
+    pointer-events: none;
+    z-index: 99999;
+    left: ${randomX}px;
+    top: ${randomY}px;
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  `;
+  
+  // Append directly to document body to ensure no clipping
+  document.body.appendChild(coin);
+  console.log(`Created coin at (${randomX}, ${randomY}), animating to (${endX}, ${endY})`);
+  
+  // Add floating animation first
+  coin.style.animation = 'coinFloat 0.2s ease-out';
+  
+  // Start the main animation after floating animation completes
+  setTimeout(() => {
+    // Apply the transition for smooth movement
+    coin.style.transition = 'all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    coin.style.left = `${endX}px`;
+    coin.style.top = `${endY}px`;
+    coin.style.transform = 'translate(-50%, -50%) scale(1.2)';
+  }, 200);
+  
+  // Scale down and fade out AFTER reaching destination
+  setTimeout(() => {
+    coin.style.transition = 'all 0.3s ease-in';
+    coin.style.transform = 'translate(-50%, -50%) scale(0.5)';
+    coin.style.opacity = '0';
+  }, 1200); // Wait for travel animation to complete
+  
+  // Remove coin after fade animation
+  setTimeout(() => {
+    if (coin.parentNode) {
+      coin.parentNode.removeChild(coin);
+    }
+    
+    // Trigger coin count animation on last coin
+    if (index === 0) {
+      triggerCoinCountUpdate();
+    }
+  }, 1500); // Total: 1200ms travel + 300ms fade
+}
+
+function triggerCoinCountUpdate() {
+  // Dispatch custom event to trigger incremental counting
+  window.dispatchEvent(new CustomEvent('coinsAnimationComplete'));
 }
 
 // Listen for game state updates
