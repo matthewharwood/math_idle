@@ -373,10 +373,17 @@ function createAnimatedCoin(startX, startY, endX, endY, index) {
   coin.className = 'animated-coin';
   coin.textContent = '🪙';
   
-  // Add random spread at start
+  // Add random spread at start but constrain to viewport
   const spread = 40;
-  const randomX = startX + (Math.random() - 0.5) * spread;
-  const randomY = startY + (Math.random() - 0.5) * spread;
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  
+  // Calculate random spread but clamp within viewport bounds
+  const randomOffsetX = (Math.random() - 0.5) * spread;
+  const randomOffsetY = (Math.random() - 0.5) * spread;
+  
+  const randomX = Math.max(50, Math.min(viewportWidth - 50, startX + randomOffsetX));
+  const randomY = Math.max(50, Math.min(viewportHeight - 50, startY + randomOffsetY));
   
   coin.style.cssText = `
     position: fixed;

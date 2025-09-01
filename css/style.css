@@ -126,15 +126,8 @@ body {
 
 body {
   box-sizing: border-box;
-  margin: 0;
-  padding: calc(32px + 38px + 32px) var(--space-10) var(--space-10); /* Top padding accounts for title */
   font-family: var(--font-sans);
   background: linear-gradient(135deg, var(--body-bg-start) 0%, var(--body-bg-end) 100%);
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
   transition: background 0.3s ease;
 }
 
@@ -347,10 +340,6 @@ card-container {
 
 /* Game Info Bar */
 .game-info-bar {
-  position: fixed;
-  bottom: var(--space-4);
-  left: 50%;
-  transform: translateX(-50%);
   background: var(--surface-elev);
   padding: var(--space-3) var(--space-6);
   border-radius: 24px;
