@@ -31,6 +31,9 @@
 
 <body>
 
+  <!-- Game Title -->
+  <h1 class="game-title">Math Idle Game</h1>
+
   <!-- Settings Button -->
   <settings-button></settings-button>
 
@@ -60,7 +63,7 @@
   </side-drawer>
 
   <!-- Card Container - will be populated by game state -->
-  <card-container title="Math Idle Game" gap="16" slot-width="64" slot-height="110">
+  <card-container gap="16" slot-width="64" slot-height="110">
     <!-- Cards will be dynamically loaded from game state -->
   </card-container>
   
@@ -77,6 +80,20 @@
   </div>
   
   <style>
+    .game-title {
+      position: fixed;
+      top: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      margin: 0;
+      font-family: var(--font-display, 'UnifrakturMaguntia', cursive);
+      font-size: 38px;
+      font-weight: 400;
+      color: var(--text);
+      text-align: center;
+      z-index: 100;
+    }
+    
     .difficulty-controls {
       position: fixed;
       bottom: var(--space-4);
@@ -87,6 +104,11 @@
     }
     
     @media (max-width: 768px) {
+      .game-title {
+        font-size: 28px;
+        top: 20px;
+      }
+      
       .difficulty-controls {
         bottom: calc(var(--space-4) + 60px); /* Above game info bar on mobile */
         right: 50%;

@@ -10,7 +10,7 @@ export class CardContainer extends HTMLElement {
   }
   
   static get observedAttributes() {
-    return ['title', 'gap', 'bg-color', 'padding', 'direction', 'slot-width', 'slot-height', 'sort-order', 'winning'];
+    return ['gap', 'bg-color', 'padding', 'direction', 'slot-width', 'slot-height', 'sort-order', 'winning'];
   }
   
   attributeChangedCallback(name, oldValue, newValue) {
@@ -512,7 +512,6 @@ export class CardContainer extends HTMLElement {
   }
   
   render() {
-    const title = this.getAttribute('title') || '';
     const gap = parseInt(this.getAttribute('gap') || '16');
     const bgColor = this.getAttribute('bg-color') || 'var(--surface, #f7fafc)';
     const padding = this.getAttribute('padding') || 'var(--space-5, 20px)';
@@ -565,19 +564,6 @@ export class CardContainer extends HTMLElement {
           height: 100%;
         }
         
-        .title {
-          margin: 0 0 var(--space-4, 16px) 0;
-          font-family: var(--font-display, 'UnifrakturMaguntia', cursive);
-          font-size: 28px;
-          font-weight: 400;
-          color: var(--text, #2d3748);
-          text-align: center;
-        }
-        
-        .title:empty {
-          display: none;
-        }
-        
         ::slotted(card-slot) {
           position: absolute !important;
         }
@@ -614,7 +600,6 @@ export class CardContainer extends HTMLElement {
           opacity: 0.9;
         }
       </style>
-      ${title ? `<h2 class="title">${title}</h2>` : ''}
       <div class="sort-order-tag">${sortOrder}</div>
       <div class="container">
         <div class="cards-wrapper">

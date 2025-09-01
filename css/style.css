@@ -127,7 +127,7 @@ body {
 body {
   box-sizing: border-box;
   margin: 0;
-  padding: var(--space-10);
+  padding: calc(32px + 38px + 32px) var(--space-10) var(--space-10); /* Top padding accounts for title */
   font-family: var(--font-sans);
   background: linear-gradient(135deg, var(--body-bg-start) 0%, var(--body-bg-end) 100%);
   min-height: 100vh;
