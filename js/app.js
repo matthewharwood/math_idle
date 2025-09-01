@@ -66,6 +66,14 @@ function updateUIFromGameState(gameState) {
     if (container.connectedCallback) {
       container.connectedCallback();
     }
+    
+    // If this is a refresh after winning, animate the new cards
+    if (container.hasAttribute('winning')) {
+      container.removeAttribute('winning');
+      setTimeout(() => {
+        container.animateNewCards();
+      }, 100);
+    }
   });
 }
 
@@ -125,8 +133,22 @@ function updateScoreDisplay(gameState) {
 // Listen for game state updates
 window.addEventListener('gameStateUpdated', (event) => {
   const gameState = event.detail;
+  const container = document.querySelector('card-container');
+  
+  // Clear winning state before update
+  if (container && container.hasAttribute('winning')) {
+    container.removeAttribute('winning');
+  }
+  
   updateUIFromGameState(gameState);
   updateScoreDisplay(gameState);
+  
+  // Animate new cards entering
+  if (container && container.animateNewCards) {
+    setTimeout(() => {
+      container.animateNewCards();
+    }, 50);
+  }
 });
 
 // Wait for DOM and components to be ready

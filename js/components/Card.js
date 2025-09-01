@@ -6,7 +6,7 @@ export class Card extends HTMLElement {
   }
   
   static get observedAttributes() {
-    return ['label', 'card-type', 'data-slot-index', 'dragging', 'snap-preview', 'drop-success', 'swap-target'];
+    return ['label', 'card-type', 'data-slot-index', 'dragging', 'snap-preview', 'drop-success', 'swap-target', 'falling', 'entering'];
   }
   
   attributeChangedCallback(name, oldValue, newValue) {
@@ -107,6 +107,17 @@ export class Card extends HTMLElement {
           animation: dropBounce 0.4s ease-out;
         }
         
+        /* Falling animation for sorted state */
+        :host([falling]) {
+          animation: fallOff 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+          pointer-events: none;
+        }
+        
+        /* Entering animation for new cards */
+        :host([entering]) {
+          animation: scaleIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        
         @keyframes dropBounce {
           0% {
             transform: scale(1.05) translateY(-10px);
@@ -122,6 +133,31 @@ export class Card extends HTMLElement {
           }
           100% {
             transform: scale(1) translateY(0);
+          }
+        }
+        
+        @keyframes fallOff {
+          0% {
+            transform: translateY(0) rotate(0deg) scale(1);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(300px) rotate(15deg) scale(0.8);
+            opacity: 0;
+          }
+        }
+        
+        @keyframes scaleIn {
+          0% {
+            transform: scale(0) rotate(-180deg);
+            opacity: 0;
+          }
+          50% {
+            opacity: 1;
+          }
+          100% {
+            transform: scale(1) rotate(0deg);
+            opacity: 1;
           }
         }
         

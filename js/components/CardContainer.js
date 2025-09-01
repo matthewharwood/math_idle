@@ -356,21 +356,30 @@ export class CardContainer extends HTMLElement {
       // Set winning state
       this.setAttribute('winning', '');
       
-      // Dispatch winning event
-      this.dispatchEvent(new CustomEvent('containerWon', {
-        detail: {
-          values: values,
-          sortOrder: sortOrder
-        },
-        bubbles: true
-      }));
+      // Trigger staggered fall animation
+      sortedCards.forEach((card, index) => {
+        setTimeout(() => {
+          card.setAttribute('falling', '');
+        }, index * 50); // Stagger by 50ms per card
+      });
+      
+      // Dispatch winning event after animations start
+      setTimeout(() => {
+        this.dispatchEvent(new CustomEvent('containerWon', {
+          detail: {
+            values: values,
+            sortOrder: sortOrder
+          },
+          bubbles: true
+        }));
+      }, 100);
       
       // Disable all cards
       sortedCards.forEach(card => {
         card.style.pointerEvents = 'none';
       });
       
-      console.log('Container won! Values:', values);
+      console.log('Container sorted! Values:', values);
     } else if (!isWinning && this.hasAttribute('winning')) {
       // Remove winning state if no longer winning
       this.removeAttribute('winning');
@@ -478,6 +487,22 @@ export class CardContainer extends HTMLElement {
     setTimeout(() => {
       this.checkWinningCondition();
     }, 400); // Wait for animation to complete
+  }
+  
+  animateNewCards() {
+    const cards = this.querySelectorAll('card-element');
+    cards.forEach((card, index) => {
+      // Remove falling attribute
+      card.removeAttribute('falling');
+      // Add entering attribute with stagger
+      setTimeout(() => {
+        card.setAttribute('entering', '');
+        // Remove entering attribute after animation
+        setTimeout(() => {
+          card.removeAttribute('entering');
+        }, 320);
+      }, index * 50); // Stagger by 50ms per card
+    });
   }
   
   render() {

@@ -154,7 +154,7 @@ class GameManager {
     // Increment level
     const newLevel = await this.incrementLevel();
     
-    // Generate new cards after a delay
+    // Generate new cards after fall animation completes
     setTimeout(async () => {
       const cardValues = fiveNumberGenerator();
       this.currentState = createNewGameState(cardValues);
@@ -169,7 +169,7 @@ class GameManager {
           detail: this.currentState
         }));
       }
-    }, 1500); // Wait 1.5 seconds before generating new cards
+    }, 400); // Wait for fall animation to complete (320ms + buffer)
     
     return { score: newScore, level: newLevel };
   }
