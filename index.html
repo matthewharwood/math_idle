@@ -24,7 +24,43 @@
 
 <body>
 
-  <script src="js/app.js"></script>
+  <!-- Card Container with 3 slots and cards -->
+  <card-container title="My Card Collection" gap="16px">
+    <!-- Slot 1 with Card -->
+    <card-slot width="64px" height="110px" accepts-drop="true">
+      <card-element label="Card 1" width="64px" height="110px" draggable="true"></card-element>
+    </card-slot>
+    
+    <!-- Slot 2 with Card -->
+    <card-slot width="64px" height="110px" accepts-drop="true">
+      <card-element label="Card 2" width="64px" height="110px" draggable="true"></card-element>
+    </card-slot>
+    
+    <!-- Slot 3 with Card -->
+    <card-slot width="64px" height="110px" accepts-drop="true">
+      <card-element label="Card 3" width="64px" height="110px" draggable="true"></card-element>
+    </card-slot>
+  </card-container>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 40px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    card-container {
+      max-width: 600px;
+      width: 100%;
+    }
+  </style>
+
+  <script type="module" src="js/app.js"></script>
 
 </body>
 
