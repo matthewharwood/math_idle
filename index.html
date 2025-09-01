@@ -28,18 +28,18 @@
   <!-- Card Container with 3 slots and cards -->
   <card-container title="My Card Collection" gap="16" slot-width="64" slot-height="110">
     <!-- Slot 1 with Card -->
-    <card-slot width="64px" height="110px">
-      <card-element id="card-1" label="Card 1" width="64px" height="110px" gradient-type="1"></card-element>
+    <card-slot>
+      <card-element id="card-1" label="Default" card-type="default"></card-element>
     </card-slot>
     
     <!-- Slot 2 with Card -->
-    <card-slot width="64px" height="110px">
-      <card-element id="card-2" label="Card 2" width="64px" height="110px" gradient-type="2"></card-element>
+    <card-slot>
+      <card-element id="card-2" label="Success" card-type="success"></card-element>
     </card-slot>
     
     <!-- Slot 3 with Card -->
-    <card-slot width="64px" height="110px">
-      <card-element id="card-3" label="Card 3" width="64px" height="110px" gradient-type="3"></card-element>
+    <card-slot>
+      <card-element id="card-3" label="Accent" card-type="accent"></card-element>
     </card-slot>
   </card-container>
 
@@ -68,10 +68,37 @@
       --danger-light: var(--color-rose-400);
       --danger-dark: var(--color-rose-700);
       
-      /* Card gradients using OKLCH colors */
-      --card-gradient-1: linear-gradient(135deg, var(--color-blue-500) 0%, var(--color-blue-700) 100%);
-      --card-gradient-2: linear-gradient(135deg, var(--color-emerald-500) 0%, var(--color-emerald-700) 100%);
-      --card-gradient-3: linear-gradient(135deg, var(--color-rose-500) 0%, var(--color-rose-700) 100%);
+      /* Card colors - gray default with semantic variants */
+      --card-default: linear-gradient(135deg, var(--color-gray-500) 0%, var(--color-gray-700) 100%);
+      --card-accent: linear-gradient(135deg, var(--color-blue-500) 0%, var(--color-blue-700) 100%);
+      --card-success: linear-gradient(135deg, var(--color-emerald-500) 0%, var(--color-emerald-700) 100%);
+      --card-danger: linear-gradient(135deg, var(--color-rose-500) 0%, var(--color-rose-700) 100%);
+      
+      /* Shadows */
+      --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.08);
+      --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.12);
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+      --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.20);
+      --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.25);
+      
+      /* Patterns */
+      --pattern-diagonal: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        rgba(0, 0, 0, 0.03) 10px,
+        rgba(0, 0, 0, 0.03) 20px
+      );
+      
+      /* Responsive card sizes */
+      --card-width: 64px;
+      --card-height: 110px;
+      --card-width-mobile: 80px;
+      --card-height-mobile: 130px;
+      
+      /* Spacing */
+      --card-gap: 16px;
+      --hit-area: 8px;
     }
     
     body {
@@ -86,7 +113,20 @@
     }
     
     card-container {
-      /* Container sizes itself based on content */
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    
+    @media (max-width: 640px) {
+      :root {
+        --card-width: var(--card-width-mobile);
+        --card-height: var(--card-height-mobile);
+      }
+      
+      body {
+        padding: var(--space-4);
+      }
     }
   </style>
 

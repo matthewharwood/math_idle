@@ -17,3 +17,4 @@ animate('.square', {
   loop: true,
 });
 ```
+- Any Localstorage MUST use the package `import { openDB, deleteDB, wrap, unwrap } from 'idb';`. WebFetch: `https://github.com/jakearchibald/idb#readme`.

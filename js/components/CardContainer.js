@@ -31,7 +31,8 @@ export class CardContainer extends HTMLElement {
   initializeState() {
     const slots = this.querySelectorAll('card-slot');
     const gap = parseInt(this.getAttribute('gap') || '16');
-    const slotWidth = parseInt(this.getAttribute('slot-width') || '64');
+    const isMobile = window.matchMedia('(max-width: 640px)').matches;
+    const slotWidth = isMobile ? 80 : parseInt(this.getAttribute('slot-width') || '64');
     
     this.state = Array.from(slots).map((slot, index) => {
       const card = slot.querySelector('card-element');
@@ -231,15 +232,16 @@ export class CardContainer extends HTMLElement {
   
   render() {
     const title = this.getAttribute('title') || '';
-    const gap = this.getAttribute('gap') || '16px';
+    const gap = parseInt(this.getAttribute('gap') || '16');
     const bgColor = this.getAttribute('bg-color') || 'var(--surface, #f7fafc)';
     const padding = this.getAttribute('padding') || 'var(--space-5, 20px)';
-    const slotHeight = parseInt(this.getAttribute('slot-height') || '110');
-    const slotWidth = parseInt(this.getAttribute('slot-width') || '64');
+    const isMobile = window.matchMedia('(max-width: 640px)').matches;
+    const slotHeight = isMobile ? 130 : parseInt(this.getAttribute('slot-height') || '110');
+    const slotWidth = isMobile ? 80 : parseInt(this.getAttribute('slot-width') || '64');
     
     // Calculate container width based on number of slots
     const numSlots = this.querySelectorAll('card-slot').length || 3;
-    const containerWidth = (slotWidth * numSlots) + (parseInt(gap) * (numSlots - 1));
+    const containerWidth = (slotWidth * numSlots) + (gap * (numSlots - 1));
     
     this.shadowRoot.innerHTML = `
       <style>
