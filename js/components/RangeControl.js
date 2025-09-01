@@ -98,8 +98,9 @@ export class RangeControl extends HTMLElement {
           background: var(--surface-elev, #fff);
           border: 2px solid var(--border, #cbd5e0);
           border-radius: 12px;
-          padding: var(--space-2, 8px);
-          box-shadow: var(--shadow-sm);
+          padding: var(--space-2, 8px) var(--space-3, 12px);
+          box-shadow: var(--shadow-lg);
+          backdrop-filter: blur(10px);
           transition: all 0.2s ease;
         }
         

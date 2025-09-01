@@ -139,9 +139,18 @@ body {
 }
 
 card-container {
-  max-width: 600px;
-  width: 100%;
+  /* Fixed width for 8 cards with 64px width + 16px gaps */
+  width: 624px; /* (64 * 8) + (16 * 7) */
   margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  card-container {
+    /* Fixed width for 8 cards with 80px width + 16px gaps on mobile */
+    width: 752px; /* (80 * 8) + (16 * 7) */
+    transform: scale(0.65);
+    transform-origin: center;
+  }
 }
 
 /* Settings Button */

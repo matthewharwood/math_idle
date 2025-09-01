@@ -39,9 +39,15 @@ export class CardContainer extends HTMLElement {
     const isMobile = window.matchMedia('(max-width: 640px)').matches;
     const slotWidth = isMobile ? 80 : parseInt(this.getAttribute('slot-width') || '64');
     
+    // Calculate offset to center cards when less than 8
+    const maxSlots = 8;
+    const containerWidth = (slotWidth * maxSlots) + (gap * (maxSlots - 1));
+    const actualWidth = (slotWidth * slots.length) + (gap * (slots.length - 1));
+    const centerOffset = (containerWidth - actualWidth) / 2;
+    
     this.state = Array.from(slots).map((slot, index) => {
       const card = slot.querySelector('card-element');
-      const x = index * (slotWidth + gap);
+      const x = centerOffset + (index * (slotWidth + gap));
       const y = 0;
       
       // Set slot position
@@ -514,9 +520,9 @@ export class CardContainer extends HTMLElement {
     const slotHeight = isMobile ? 130 : parseInt(this.getAttribute('slot-height') || '110');
     const slotWidth = isMobile ? 80 : parseInt(this.getAttribute('slot-width') || '64');
     
-    // Calculate container width based on number of slots
-    const numSlots = this.querySelectorAll('card-slot').length || 3;
-    const containerWidth = (slotWidth * numSlots) + (gap * (numSlots - 1));
+    // Fixed width for 8 cards to prevent CLS
+    const maxSlots = 8;
+    const containerWidth = (slotWidth * maxSlots) + (gap * (maxSlots - 1));
     
     const sortOrder = this.getAttribute('sort-order') || 'ASC';
     const isWinning = this.hasAttribute('winning');
@@ -549,6 +555,14 @@ export class CardContainer extends HTMLElement {
           position: relative;
           height: ${slotHeight}px;
           width: ${containerWidth}px;
+          display: flex;
+          justify-content: center;
+        }
+        
+        .cards-wrapper {
+          position: relative;
+          width: 100%;
+          height: 100%;
         }
         
         .title {
@@ -603,7 +617,9 @@ export class CardContainer extends HTMLElement {
       ${title ? `<h2 class="title">${title}</h2>` : ''}
       <div class="sort-order-tag">${sortOrder}</div>
       <div class="container">
-        <slot></slot>
+        <div class="cards-wrapper">
+          <slot></slot>
+        </div>
       </div>
     `;
   }
