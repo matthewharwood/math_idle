@@ -6,12 +6,11 @@ export function generateRandomNumbers(n, start, end) {
   return numbers;
 }
 
-export const generateFiveRandomNumbers = () => generateRandomNumbers(5, 0, 100);
-
 export function createRandomNumberGenerator(defaultN, defaultStart, defaultEnd) {
   return (n = defaultN, start = defaultStart, end = defaultEnd) => {
     return generateRandomNumbers(n, start, end);
   };
 }
 
-export const fiveNumberGenerator = createRandomNumberGenerator(5, 0, 100);
+
+export const fiveNumberGenerator = createRandomNumberGenerator(5, 0, 10);

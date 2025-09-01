@@ -59,16 +59,51 @@
     </div>
   </side-drawer>
 
-  <!-- Card Container - will be populated by game state -->
-  <card-container title="Math Idle Game" gap="16" slot-width="64" slot-height="110">
-    <!-- Cards will be dynamically loaded from game state -->
-  </card-container>
+  <!-- Game Container -->
+  <div class="game-container">
+    <!-- Card Container - will be populated by game state -->
+    <card-container title="Math Idle Game" gap="16" slot-width="64" slot-height="110">
+      <!-- Cards will be dynamically loaded from game state -->
+    </card-container>
+    
+    <!-- Difficulty Controls -->
+    <div class="difficulty-controls">
+      <difficulty-control label="Cards" value="5" min="2" max="10"></difficulty-control>
+      <range-control label="Range" value="10"></range-control>
+    </div>
+  </div>
 
   <!-- Game Info Bar -->
   <div class="game-info-bar">
     <span id="score-display">Score: <span id="score">0</span></span>
     <span id="level-display">Level: <span id="level">1</span></span>
   </div>
+  
+  <style>
+    .game-container {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+      position: relative;
+    }
+    
+    .difficulty-controls {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+    
+    @media (max-width: 768px) {
+      .game-container {
+        flex-direction: column;
+      }
+      
+      .difficulty-controls {
+        flex-direction: row;
+        justify-content: center;
+      }
+    }
+  </style>
 
   <script type="module" src="js/app.js"></script>
 

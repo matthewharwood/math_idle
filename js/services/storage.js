@@ -21,6 +21,8 @@ export const Game = {
   cards: [],        // Array of card objects with {id, value, slotIndex}
   score: 0,         // Current game score
   level: 1,         // Current game level
+  cardCount: 5,     // Number of cards (difficulty)
+  numberRange: 10,  // Maximum number range
   timestamp: null,  // Last save timestamp
 };
 
@@ -101,7 +103,7 @@ export async function deleteGameDatabase() {
 }
 
 // Helper function to create a new game state
-export function createNewGameState(cardValues) {
+export function createNewGameState(cardValues, cardCount = 5, numberRange = 10) {
   return {
     cards: cardValues.map((value, index) => ({
       id: `card-${index + 1}`,
@@ -111,6 +113,8 @@ export function createNewGameState(cardValues) {
     })),
     score: 0,
     level: 1,
+    cardCount: cardCount,
+    numberRange: numberRange,
     timestamp: Date.now()
   };
 }

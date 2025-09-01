@@ -5,7 +5,7 @@ import {
   clearGameState,
   swapCards 
 } from './storage.js';
-import { fiveNumberGenerator } from '../utils/generate-random-numbers.js';
+import { createRandomNumberGenerator } from '../utils/generate-random-numbers.js';
 
 class GameManager {
   constructor() {
@@ -24,10 +24,13 @@ class GameManager {
     this.currentState = await loadGameState();
     
     if (!this.currentState) {
-      // No saved state, create new game
+      // No saved state, create new game with defaults
       console.log('Creating new game...');
-      const cardValues = fiveNumberGenerator();
-      this.currentState = createNewGameState(cardValues);
+      const cardCount = 5;
+      const numberRange = 10;
+      const numberGenerator = createRandomNumberGenerator(cardCount, 0, numberRange);
+      const cardValues = numberGenerator();
+      this.currentState = createNewGameState(cardValues, cardCount, numberRange);
       await saveGameState(this.currentState);
     }
     
@@ -36,15 +39,20 @@ class GameManager {
   }
 
   // Start a new game
-  async newGame() {
+  async newGame(cardCount = null, numberRange = null) {
     console.log('Starting new game...');
+    
+    // Use provided values or current state values or defaults
+    const count = cardCount || this.currentState?.cardCount || 5;
+    const range = numberRange || this.currentState?.numberRange || 10;
     
     // Clear existing state
     await clearGameState();
     
-    // Generate new card values
-    const cardValues = fiveNumberGenerator();
-    this.currentState = createNewGameState(cardValues);
+    // Generate new card values with current difficulty
+    const numberGenerator = createRandomNumberGenerator(count, 0, range);
+    const cardValues = numberGenerator();
+    this.currentState = createNewGameState(cardValues, count, range);
     
     // Save the new state
     await saveGameState(this.currentState);
@@ -156,8 +164,12 @@ class GameManager {
     
     // Generate new cards after fall animation completes
     setTimeout(async () => {
-      const cardValues = fiveNumberGenerator();
-      this.currentState = createNewGameState(cardValues);
+      const cardCount = this.currentState.cardCount || 5;
+      const numberRange = this.currentState.numberRange || 10;
+      const numberGenerator = createRandomNumberGenerator(cardCount, 0, numberRange);
+      const cardValues = numberGenerator();
+      
+      this.currentState = createNewGameState(cardValues, cardCount, numberRange);
       this.currentState.score = newScore; // Preserve score
       this.currentState.level = newLevel; // Preserve level
       
@@ -184,6 +196,34 @@ class GameManager {
   getCardsInOrder() {
     if (!this.currentState) return [];
     return [...this.currentState.cards].sort((a, b) => a.slotIndex - b.slotIndex);
+  }
+  
+  // Update difficulty settings
+  async updateDifficulty(cardCount, numberRange) {
+    if (!this.currentState) return;
+    
+    // Store current score and level
+    const currentScore = this.currentState.score;
+    const currentLevel = this.currentState.level;
+    
+    // Generate new cards with new difficulty
+    const numberGenerator = createRandomNumberGenerator(cardCount, 0, numberRange);
+    const cardValues = numberGenerator();
+    
+    this.currentState = createNewGameState(cardValues, cardCount, numberRange);
+    this.currentState.score = currentScore; // Preserve score
+    this.currentState.level = currentLevel; // Preserve level
+    
+    await saveGameState(this.currentState);
+    
+    // Trigger UI update
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('gameStateUpdated', {
+        detail: this.currentState
+      }));
+    }
+    
+    return this.currentState;
   }
 }
 

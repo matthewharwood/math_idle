@@ -6,6 +6,8 @@ import './components/SettingsButton.js';
 import './components/SideDrawer.js';
 import './components/GameButton.js';
 import './components/ThemeButton.js';
+import './components/DifficultyControl.js';
+import './components/RangeControl.js';
 
 // Import services
 import gameManager from './services/game.js';
@@ -28,6 +30,9 @@ async function initializeGame() {
     
     // Set up event listeners for card swaps
     setupCardSwapListeners();
+    
+    // Set up difficulty controls
+    setupDifficultyControls(gameState);
     
     console.log('Game initialized successfully');
   } catch (error) {
@@ -123,9 +128,60 @@ function setupCardSwapListeners() {
           const newState = gameManager.getState();
           updateUIFromGameState(newState);
           updateScoreDisplay(newState);
+          updateDifficultyControls(newState);
         }
       }
     });
+  }
+}
+
+// Set up difficulty controls
+function setupDifficultyControls(gameState) {
+  const difficultyControl = document.querySelector('difficulty-control');
+  const rangeControl = document.querySelector('range-control');
+  
+  if (difficultyControl) {
+    // Set initial value
+    difficultyControl.setAttribute('value', gameState?.cardCount || 5);
+    
+    // Listen for changes
+    difficultyControl.addEventListener('difficulty-changed', async (event) => {
+      const cardCount = event.detail.value;
+      const currentRange = rangeControl?.value || gameState?.numberRange || 10;
+      
+      const updatedState = await gameManager.updateDifficulty(cardCount, currentRange);
+      updateUIFromGameState(updatedState);
+      updateScoreDisplay(updatedState);
+    });
+  }
+  
+  if (rangeControl) {
+    // Set initial value
+    rangeControl.setAttribute('value', gameState?.numberRange || 10);
+    
+    // Listen for changes
+    rangeControl.addEventListener('range-changed', async (event) => {
+      const numberRange = event.detail.value;
+      const currentCount = difficultyControl?.value || gameState?.cardCount || 5;
+      
+      const updatedState = await gameManager.updateDifficulty(currentCount, numberRange);
+      updateUIFromGameState(updatedState);
+      updateScoreDisplay(updatedState);
+    });
+  }
+}
+
+// Update difficulty controls display
+function updateDifficultyControls(gameState) {
+  const difficultyControl = document.querySelector('difficulty-control');
+  const rangeControl = document.querySelector('range-control');
+  
+  if (difficultyControl && gameState?.cardCount) {
+    difficultyControl.setAttribute('value', gameState.cardCount);
+  }
+  
+  if (rangeControl && gameState?.numberRange) {
+    rangeControl.setAttribute('value', gameState.numberRange);
   }
 }
 
@@ -156,6 +212,7 @@ window.addEventListener('gameStateUpdated', (event) => {
   
   updateUIFromGameState(gameState);
   updateScoreDisplay(gameState);
+  updateDifficultyControls(gameState);
   
   // Animate new cards entering
   if (container && container.animateNewCards) {
