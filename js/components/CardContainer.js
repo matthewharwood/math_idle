@@ -232,8 +232,8 @@ export class CardContainer extends HTMLElement {
   render() {
     const title = this.getAttribute('title') || '';
     const gap = this.getAttribute('gap') || '16px';
-    const bgColor = this.getAttribute('bg-color') || '#f7fafc';
-    const padding = this.getAttribute('padding') || '20px';
+    const bgColor = this.getAttribute('bg-color') || 'var(--surface, #f7fafc)';
+    const padding = this.getAttribute('padding') || 'var(--space-5, 20px)';
     const slotHeight = parseInt(this.getAttribute('slot-height') || '110');
     const slotWidth = parseInt(this.getAttribute('slot-width') || '64');
     
@@ -259,11 +259,11 @@ export class CardContainer extends HTMLElement {
         }
         
         .title {
-          margin: 0 0 16px 0;
+          margin: 0 0 var(--space-4, 16px) 0;
           font-family: system-ui, -apple-system, sans-serif;
           font-size: 18px;
           font-weight: 600;
-          color: #2d3748;
+          color: var(--text, #2d3748);
           text-align: center;
         }
         

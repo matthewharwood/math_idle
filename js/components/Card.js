@@ -6,7 +6,7 @@ export class Card extends HTMLElement {
   }
   
   static get observedAttributes() {
-    return ['label', 'width', 'height', 'bg-color', 'text-color', 'data-slot-index'];
+    return ['label', 'width', 'height', 'gradient-type', 'text-color', 'data-slot-index'];
   }
   
   attributeChangedCallback(name, oldValue, newValue) {
@@ -29,7 +29,7 @@ export class Card extends HTMLElement {
     const label = this.getAttribute('label') || '';
     const width = this.getAttribute('width') || '64px';
     const height = this.getAttribute('height') || '110px';
-    const bgColor = this.getAttribute('bg-color') || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+    const gradientType = this.getAttribute('gradient-type') || '1';
     const textColor = this.getAttribute('text-color') || 'white';
     
     this.shadowRoot.innerHTML = `
@@ -38,7 +38,7 @@ export class Card extends HTMLElement {
           display: block;
           width: ${width};
           height: ${height};
-          background: ${bgColor};
+          background: var(--card-gradient-${gradientType});
           border-radius: 8px;
           box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
           cursor: move;

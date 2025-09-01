@@ -34,7 +34,7 @@ export class CardSlot extends HTMLElement {
   render() {
     const width = this.getAttribute('width') || '64px';
     const height = this.getAttribute('height') || '110px';
-    const borderColor = this.getAttribute('border-color') || '#cbd5e0';
+    const borderColor = this.getAttribute('border-color') || 'var(--border, #cbd5e0)';
     const borderStyle = this.getAttribute('border-style') || 'dashed';
     
     this.shadowRoot.innerHTML = `
@@ -51,8 +51,8 @@ export class CardSlot extends HTMLElement {
         }
         
         :host(.drop-ready) {
-          border-color: #667eea;
-          background-color: rgba(102, 126, 234, 0.05);
+          border-color: var(--accent, #667eea);
+          background-color: var(--accent-surface, rgba(102, 126, 234, 0.05));
           border-style: solid;
           transform: scale(1.02);
         }
@@ -61,7 +61,7 @@ export class CardSlot extends HTMLElement {
           content: '';
           position: absolute;
           inset: -4px;
-          border: 2px solid #667eea;
+          border: 2px solid var(--accent, #667eea);
           border-radius: 10px;
           opacity: 0.3;
           animation: pulse 1s ease-in-out infinite;

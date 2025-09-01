@@ -5,6 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title></title>
+  <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/style.css">
   <meta name="description" content="">
 
@@ -28,26 +29,56 @@
   <card-container title="My Card Collection" gap="16" slot-width="64" slot-height="110">
     <!-- Slot 1 with Card -->
     <card-slot width="64px" height="110px">
-      <card-element id="card-1" label="Card 1" width="64px" height="110px"></card-element>
+      <card-element id="card-1" label="Card 1" width="64px" height="110px" gradient-type="1"></card-element>
     </card-slot>
     
     <!-- Slot 2 with Card -->
     <card-slot width="64px" height="110px">
-      <card-element id="card-2" label="Card 2" width="64px" height="110px"></card-element>
+      <card-element id="card-2" label="Card 2" width="64px" height="110px" gradient-type="2"></card-element>
     </card-slot>
     
     <!-- Slot 3 with Card -->
     <card-slot width="64px" height="110px">
-      <card-element id="card-3" label="Card 3" width="64px" height="110px"></card-element>
+      <card-element id="card-3" label="Card 3" width="64px" height="110px" gradient-type="3"></card-element>
     </card-slot>
   </card-container>
 
   <style>
+    :root {
+      /* Semantic colors mapped from OKLCH variables */
+      --surface: var(--color-gray-50);
+      --surface-elev: var(--color-gray-100);
+      --text: var(--color-gray-900);
+      --text-muted: var(--color-gray-600);
+      --border: var(--color-gray-300);
+      
+      /* Accent colors */
+      --accent: var(--color-blue-600);
+      --accent-light: var(--color-blue-400);
+      --accent-dark: var(--color-blue-700);
+      --accent-surface: oklch(97% 0.014 254 / 0.08);
+      
+      /* Success colors */
+      --success: var(--color-emerald-600);
+      --success-light: var(--color-emerald-400);
+      --success-dark: var(--color-emerald-700);
+      
+      /* Danger colors */
+      --danger: var(--color-rose-600);
+      --danger-light: var(--color-rose-400);
+      --danger-dark: var(--color-rose-700);
+      
+      /* Card gradients using OKLCH colors */
+      --card-gradient-1: linear-gradient(135deg, var(--color-blue-500) 0%, var(--color-blue-700) 100%);
+      --card-gradient-2: linear-gradient(135deg, var(--color-emerald-500) 0%, var(--color-emerald-700) 100%);
+      --card-gradient-3: linear-gradient(135deg, var(--color-rose-500) 0%, var(--color-rose-700) 100%);
+    }
+    
     body {
       margin: 0;
-      padding: 40px;
+      padding: var(--space-10);
       font-family: system-ui, -apple-system, sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      background: linear-gradient(135deg, var(--color-gray-100) 0%, var(--color-gray-200) 100%);
       min-height: 100vh;
       display: flex;
       justify-content: center;
