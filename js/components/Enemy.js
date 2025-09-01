@@ -62,17 +62,23 @@ export class Enemy extends HTMLElement {
   }
 
   /**
-   * Deal damage to current enemy
+   * Deal damage to current enemy with animation
    */
-  takeDamage(damage) {
+  async takeDamage(damage) {
     if (!this.currentEnemy) return false;
 
+    const oldHealth = this.currentHealth;
     this.currentHealth = Math.max(0, this.currentHealth - damage);
-    this.updateDisplay();
+    
+    // Show damage number animation
+    this.showDamageNumber(damage);
+    
+    // Animate health bar decrease
+    await this.animateHealthChange(oldHealth, this.currentHealth);
 
     // Check if enemy is defeated
     if (this.currentHealth <= 0) {
-      this.enemyDefeated();
+      await this.enemyDefeated();
       return true; // Enemy defeated
     }
 
@@ -82,40 +88,168 @@ export class Enemy extends HTMLElement {
   /**
    * Handle enemy defeat
    */
-  enemyDefeated() {
+  async enemyDefeated() {
+    // Play defeat animation
+    await this.playDefeatAnimation();
+    
     // Dispatch custom event for enemy defeat
     this.dispatchEvent(new CustomEvent('enemy-defeated', {
       bubbles: true,
       detail: {
         enemy: this.currentEnemy,
-        reward: this.currentEnemy.reward
+        reward: this.currentEnemy.reward,
+        enemyLevel: this.currentEnemy.level
       }
     }));
+  }
 
-    // Victory animation
-    this.playDefeatAnimation();
+  /**
+   * Show damage number animation
+   */
+  showDamageNumber(damage) {
+    const container = this.shadowRoot.querySelector('.enemy-container');
+    if (!container) return;
+
+    // Create damage number element
+    const damageEl = document.createElement('div');
+    damageEl.className = 'damage-number';
+    damageEl.textContent = `-${this.formatNumber(damage)}`;
+    
+    container.appendChild(damageEl);
+    
+    // Remove after animation
+    setTimeout(() => {
+      if (damageEl.parentNode) {
+        damageEl.parentNode.removeChild(damageEl);
+      }
+    }, 2000);
+  }
+
+  /**
+   * Animate health bar change
+   */
+  async animateHealthChange(oldHealth, newHealth) {
+    const healthBar = this.shadowRoot.querySelector('.health-fill');
+    const healthText = this.shadowRoot.querySelector('.health-text');
+    
+    if (!healthBar || !this.currentEnemy) return;
+    
+    const oldPercentage = (oldHealth / this.currentEnemy.health) * 100;
+    const newPercentage = (newHealth / this.currentEnemy.health) * 100;
+    
+    // Animate the health bar over 500ms
+    return new Promise(resolve => {
+      const duration = 500;
+      const startTime = performance.now();
+      
+      const animate = (currentTime) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Easing function for smooth animation
+        const easeOutCubic = 1 - Math.pow(1 - progress, 3);
+        
+        const currentPercentage = oldPercentage + (newPercentage - oldPercentage) * easeOutCubic;
+        const currentHealth = oldHealth + (newHealth - oldHealth) * easeOutCubic;
+        
+        healthBar.style.width = `${currentPercentage}%`;
+        
+        // Update health text
+        if (healthText) {
+          healthText.textContent = `${this.formatNumber(Math.round(currentHealth))} / ${this.formatNumber(this.currentEnemy.health)}`;
+        }
+        
+        // Change color based on health
+        if (currentPercentage > 60) {
+          healthBar.style.backgroundColor = 'var(--success)';
+        } else if (currentPercentage > 30) {
+          healthBar.style.backgroundColor = 'var(--accent)';
+        } else {
+          healthBar.style.backgroundColor = 'var(--danger)';
+        }
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          resolve();
+        }
+      };
+      
+      requestAnimationFrame(animate);
+    });
   }
 
   /**
    * Play defeat animation
    */
-  playDefeatAnimation() {
+  async playDefeatAnimation() {
+    const container = this.shadowRoot.querySelector('.enemy-container');
     const enemyImage = this.shadowRoot.querySelector('.enemy-image');
+    
+    if (container) {
+      container.classList.add('defeated');
+    }
+    
     if (enemyImage) {
       enemyImage.classList.add('defeated');
-      
-      setTimeout(() => {
-        enemyImage.classList.remove('defeated');
-      }, 1000);
     }
+    
+    // Wait for animation to complete
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    if (container) {
+      container.classList.remove('defeated');
+    }
+    
+    if (enemyImage) {
+      enemyImage.classList.remove('defeated');
+    }
+  }
+
+  /**
+   * Play enemy enter animation
+   */
+  async playEnterAnimation() {
+    const container = this.shadowRoot.querySelector('.enemy-container');
+    if (!container) return;
+    
+    container.classList.add('entering');
+    
+    // Wait for animation to complete
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    container.classList.remove('entering');
+  }
+
+  /**
+   * Play enemy exit animation
+   */
+  async playExitAnimation() {
+    const container = this.shadowRoot.querySelector('.enemy-container');
+    if (!container) return;
+    
+    container.classList.add('exiting');
+    
+    // Wait for animation to complete
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    container.classList.remove('exiting');
   }
 
   /**
    * Update enemy level (called externally)
    */
-  setLevel(level) {
+  async setLevel(level, animate = false) {
+    if (animate && this.currentEnemy) {
+      await this.playExitAnimation();
+    }
+    
     this.setAttribute('level', level);
-    this.loadEnemyState();
+    await this.loadEnemyState();
+    
+    if (animate) {
+      await this.playEnterAnimation();
+    }
   }
 
   /**
@@ -305,9 +439,50 @@ export class Enemy extends HTMLElement {
           }
         }
 
+        /* Damage Numbers */
+        .damage-number {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          color: var(--danger);
+          font-size: 32px;
+          font-weight: 700;
+          font-family: var(--font-mono);
+          pointer-events: none;
+          z-index: 1000;
+          animation: damageFloat 2s ease-out forwards;
+        }
+
+        @keyframes damageFloat {
+          0% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+          }
+          50% {
+            transform: translate(-50%, -100%) scale(1.2);
+          }
+          100% {
+            opacity: 0;
+            transform: translate(-50%, -150%) scale(0.8);
+          }
+        }
+
         /* Animations */
         .enemy-container {
           animation: fadeIn 0.5s ease;
+        }
+
+        .enemy-container.entering {
+          animation: enemyEnter 0.5s ease-out;
+        }
+
+        .enemy-container.exiting {
+          animation: enemyExit 0.5s ease-in;
+        }
+
+        .enemy-container.defeated {
+          animation: enemyDefeated 1s ease-out;
         }
 
         @keyframes fadeIn {
@@ -321,9 +496,66 @@ export class Enemy extends HTMLElement {
           }
         }
 
+        @keyframes enemyEnter {
+          0% {
+            opacity: 0;
+            transform: translateX(-100%) rotate(-10deg) scale(0.8);
+          }
+          50% {
+            transform: translateX(10px) rotate(5deg) scale(1.1);
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0) rotate(0deg) scale(1);
+          }
+        }
+
+        @keyframes enemyExit {
+          0% {
+            opacity: 1;
+            transform: translateX(0) rotate(0deg) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translateX(100%) rotate(10deg) scale(0.8);
+          }
+        }
+
+        @keyframes enemyDefeated {
+          0% {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+            filter: brightness(1);
+          }
+          25% {
+            transform: scale(1.1) rotate(-5deg);
+            filter: brightness(1.5);
+          }
+          50% {
+            transform: scale(0.95) rotate(5deg);
+            filter: brightness(0.5) contrast(2);
+          }
+          75% {
+            transform: scale(1.05) rotate(-2deg);
+            filter: grayscale(50%) brightness(0.3);
+          }
+          100% {
+            opacity: 0.7;
+            transform: scale(0.9) rotate(0deg);
+            filter: grayscale(100%) brightness(0.4);
+          }
+        }
+
+        .enemy-image.defeated {
+          filter: grayscale(100%) brightness(0.5);
+          transform: scale(0.9);
+          transition: all 0.5s ease;
+        }
+
         .health-fill {
           position: relative;
           overflow: hidden;
+          transition: width 0.1s ease, background-color 0.3s ease;
         }
 
         .health-fill::after {

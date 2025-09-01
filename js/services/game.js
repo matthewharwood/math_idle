@@ -167,18 +167,29 @@ class GameManager {
     const cardValues = this.getCardsInOrder().map(c => c.value);
     const totalDamage = cardValues.reduce((sum, value) => sum + value, 0);
     
-    // Deal damage to enemy
-    const enemyDefeated = this.dealDamageToEnemy(totalDamage);
+    // Deal damage to enemy via enemy component
+    let enemyDefeated = false;
+    if (this.enemyComponent && this.currentState.enemy) {
+      enemyDefeated = await this.enemyComponent.takeDamage(totalDamage);
+      
+      // Update game state with new enemy health
+      this.currentState.enemy.currentHealth = this.enemyComponent.currentHealth;
+    }
     
     let levelIncreased = false;
     if (enemyDefeated) {
       // Enemy defeated - level up and get new enemy
       await this.incrementLevel();
-      this.initializeEnemy();
+      this.initializeEnemyForLevel(this.currentState.level);
       levelIncreased = true;
+      
+      // Update enemy component with new enemy and animation
+      if (this.enemyComponent) {
+        await this.enemyComponent.setLevel(this.currentState.level, true);
+      }
     }
     
-    // Generate new cards after fall animation completes
+    // Generate new cards after card animation completes
     setTimeout(async () => {
       const cardCount = this.currentState.cardCount || 5;
       const numberRange = this.currentState.numberRange || 10;
@@ -196,9 +207,6 @@ class GameManager {
       this.currentState.enemy = currentEnemy;
       
       await saveGameState(this.currentState);
-      
-      // Update enemy component
-      this.updateEnemyComponent();
       
       // Trigger UI update
       if (typeof window !== 'undefined') {
@@ -296,27 +304,50 @@ class GameManager {
   }
 
   /**
-   * Deal damage to current enemy
+   * Initialize enemy for specific level (used after level up)
    */
-  dealDamageToEnemy(damage) {
-    if (!this.currentState?.enemy) return false;
+  initializeEnemyForLevel(level) {
+    if (!this.currentState) return;
     
-    const oldHealth = this.currentState.enemy.currentHealth;
-    this.currentState.enemy.currentHealth = Math.max(0, oldHealth - damage);
+    // Find the next available enemy at or above this level
+    const availableEnemy = this.getNextAvailableEnemy(level);
+    if (!availableEnemy) return;
     
-    console.log(`Dealt ${damage} damage to ${this.currentState.enemy.enemy.name}`);
-    console.log(`Health: ${oldHealth} → ${this.currentState.enemy.currentHealth}`);
+    this.currentState.enemy = {
+      enemy: { ...availableEnemy },
+      currentHealth: availableEnemy.health
+    };
     
-    // Check if enemy is defeated
-    const defeated = this.currentState.enemy.currentHealth <= 0;
+    console.log(`New enemy for level ${level}: ${availableEnemy.name} (Level ${availableEnemy.level})`);
+  }
+
+  /**
+   * Get next available enemy at or above the given level
+   */
+  getNextAvailableEnemy(level) {
+    // Find the next enemy that has level >= player level
+    const availableEnemies = enemies.filter(e => e.level >= level);
     
-    if (defeated) {
-      const reward = this.currentState.enemy.enemy.reward;
-      this.currentState.score += reward;
-      console.log(`Enemy defeated! Earned ${reward} points`);
+    if (availableEnemies.length === 0) {
+      // If no enemies at or above level, get the highest level enemy
+      return enemies[enemies.length - 1];
     }
     
-    return defeated;
+    // Return the enemy with the lowest level that's still >= player level
+    return availableEnemies.reduce((closest, current) => 
+      current.level < closest.level ? current : closest
+    );
+  }
+
+  /**
+   * Handle enemy defeat (called when enemy reaches 0 health)
+   */
+  handleEnemyDefeat() {
+    if (!this.currentState?.enemy) return;
+    
+    const reward = this.currentState.enemy.enemy.reward;
+    this.currentState.score += reward;
+    console.log(`Enemy defeated! Earned ${reward} points`);
   }
 
   /**
@@ -340,6 +371,15 @@ class GameManager {
    */
   getCurrentEnemy() {
     return this.currentState?.enemy || null;
+  }
+
+  /**
+   * Save current game state
+   */
+  async saveGameState() {
+    if (this.currentState) {
+      await saveGameState(this.currentState);
+    }
   }
 }
 

@@ -120,12 +120,12 @@ function setupCardSwapListeners() {
     // Handle win (deals damage to enemy)
     const result = await gameManager.handleWin();
     
-    // Update enemy display
-    updateEnemyDisplay(gameManager.getCurrentEnemy(), result);
-    
     // Update score and level display
     const currentState = gameManager.getState();
     updateScoreDisplay(currentState);
+    
+    // Save game state after damage/defeat
+    await gameManager.saveGameState(currentState);
   });
   
   // Set up new game button (now a web component)
@@ -215,6 +215,15 @@ function initializeEnemySystem(gameState) {
   
   // Set enemy level
   enemyComponent.setLevel(gameState.level);
+  
+  // Listen for enemy defeat events
+  enemyComponent.addEventListener('enemy-defeated', async (event) => {
+    const { reward } = event.detail;
+    console.log(`Enemy defeated! Earned ${reward} reward points`);
+    
+    // Handle the reward in game manager
+    gameManager.handleEnemyDefeat();
+  });
   
   console.log('Enemy system initialized');
 }
