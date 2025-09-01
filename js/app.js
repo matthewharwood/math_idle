@@ -58,6 +58,9 @@ function updateUIFromGameState(gameState) {
     container.appendChild(slot);
   });
   
+  // Set sort order attribute
+  container.setAttribute('sort-order', 'ASC');
+  
   // Trigger container initialization
   requestAnimationFrame(() => {
     if (container.connectedCallback) {
@@ -84,6 +87,16 @@ function setupCardSwapListeners() {
     // Could add additional game logic here
   });
   
+  // Listen for winning event
+  container.addEventListener('containerWon', async (event) => {
+    const { values, sortOrder } = event.detail;
+    console.log(`Container won! Order: ${sortOrder}, Values: ${values}`);
+    
+    // Update score and level
+    const result = await gameManager.handleWin();
+    updateScoreDisplay({ score: result.score, level: result.level });
+  });
+  
   // Set up new game button
   const newGameBtn = document.getElementById('new-game-btn');
   if (newGameBtn) {
@@ -108,6 +121,13 @@ function updateScoreDisplay(gameState) {
   if (scoreEl) scoreEl.textContent = gameState.score || 0;
   if (levelEl) levelEl.textContent = gameState.level || 1;
 }
+
+// Listen for game state updates
+window.addEventListener('gameStateUpdated', (event) => {
+  const gameState = event.detail;
+  updateUIFromGameState(gameState);
+  updateScoreDisplay(gameState);
+});
 
 // Wait for DOM and components to be ready
 if (document.readyState === 'loading') {

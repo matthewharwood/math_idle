@@ -10,7 +10,7 @@ export class CardContainer extends HTMLElement {
   }
   
   static get observedAttributes() {
-    return ['title', 'gap', 'bg-color', 'padding', 'direction', 'slot-width', 'slot-height'];
+    return ['title', 'gap', 'bg-color', 'padding', 'direction', 'slot-width', 'slot-height', 'sort-order', 'winning'];
   }
   
   attributeChangedCallback(name, oldValue, newValue) {
@@ -25,6 +25,11 @@ export class CardContainer extends HTMLElement {
       this.render(); // Re-render with correct slot count
       this.initializeState();
       this.setupDragAndDrop();
+      
+      // Check initial winning condition
+      setTimeout(() => {
+        this.checkWinningCondition();
+      }, 500);
     });
   }
   
@@ -322,6 +327,63 @@ export class CardContainer extends HTMLElement {
     });
   }
   
+  checkWinningCondition() {
+    // Get all cards in order
+    const cards = this.querySelectorAll('card-element');
+    const sortedCards = Array.from(cards).sort((a, b) => {
+      const aSlot = parseInt(a.getAttribute('data-slot-index') || 0);
+      const bSlot = parseInt(b.getAttribute('data-slot-index') || 0);
+      return aSlot - bSlot;
+    });
+    
+    // Get their values
+    const values = sortedCards.map(card => {
+      const value = parseInt(card.getAttribute('data-value') || card.getAttribute('label') || 0);
+      return value;
+    });
+    
+    // Check if in ascending order
+    const isAscending = values.every((val, idx) => {
+      if (idx === 0) return true;
+      return val >= values[idx - 1];
+    });
+    
+    const sortOrder = this.getAttribute('sort-order') || 'ASC';
+    const isWinning = (sortOrder === 'ASC' && isAscending) || 
+                      (sortOrder === 'DESC' && !isAscending);
+    
+    if (isWinning && !this.hasAttribute('winning')) {
+      // Set winning state
+      this.setAttribute('winning', '');
+      
+      // Dispatch winning event
+      this.dispatchEvent(new CustomEvent('containerWon', {
+        detail: {
+          values: values,
+          sortOrder: sortOrder
+        },
+        bubbles: true
+      }));
+      
+      // Disable all cards
+      sortedCards.forEach(card => {
+        card.style.pointerEvents = 'none';
+      });
+      
+      console.log('Container won! Values:', values);
+    } else if (!isWinning && this.hasAttribute('winning')) {
+      // Remove winning state if no longer winning
+      this.removeAttribute('winning');
+      
+      // Re-enable cards
+      sortedCards.forEach(card => {
+        card.style.pointerEvents = '';
+      });
+    }
+    
+    return isWinning;
+  }
+  
   handleCardDrop(card, targetSlotIndex) {
     const cardId = card.id;
     const currentSlotIndex = parseInt(card.getAttribute('data-slot-index'));
@@ -411,6 +473,11 @@ export class CardContainer extends HTMLElement {
         bubbles: true
       }));
     }
+    
+    // Check for winning condition after any card movement
+    setTimeout(() => {
+      this.checkWinningCondition();
+    }, 400); // Wait for animation to complete
   }
   
   render() {
@@ -426,6 +493,9 @@ export class CardContainer extends HTMLElement {
     const numSlots = this.querySelectorAll('card-slot').length || 3;
     const containerWidth = (slotWidth * numSlots) + (gap * (numSlots - 1));
     
+    const sortOrder = this.getAttribute('sort-order') || 'ASC';
+    const isWinning = this.hasAttribute('winning');
+    
     this.shadowRoot.innerHTML = `
       <style>
         :host {
@@ -437,6 +507,17 @@ export class CardContainer extends HTMLElement {
           position: relative;
           transform-style: preserve-3d;
           will-change: transform, box-shadow;
+          transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        :host([winning]) {
+          background-color: var(--color-emerald-50);
+          box-shadow: 0 0 20px rgba(16, 185, 129, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        :host([winning]) .sort-order-tag {
+          background: var(--color-emerald-600);
+          color: white;
         }
         
         .container {
@@ -472,8 +553,30 @@ export class CardContainer extends HTMLElement {
         ::slotted(card-element:active) {
           cursor: grabbing;
         }
+        
+        .sort-order-tag {
+          position: absolute;
+          top: ${padding};
+          right: ${padding};
+          background: var(--accent);
+          color: white;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-family: system-ui, -apple-system, sans-serif;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          z-index: 100;
+          transition: background-color 0.3s ease;
+        }
+        
+        :host([winning]) ::slotted(card-element) {
+          pointer-events: none;
+          opacity: 0.9;
+        }
       </style>
       ${title ? `<h2 class="title">${title}</h2>` : ''}
+      <div class="sort-order-tag">${sortOrder}</div>
       <div class="container">
         <slot></slot>
       </div>

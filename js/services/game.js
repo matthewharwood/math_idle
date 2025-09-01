@@ -119,6 +119,7 @@ class GameManager {
     await saveGameState(this.currentState);
     
     console.log('Score updated:', this.currentState.score);
+    return this.currentState.score;
   }
 
   // Update level
@@ -129,6 +130,48 @@ class GameManager {
     await saveGameState(this.currentState);
     
     console.log('Level updated:', this.currentState.level);
+    return this.currentState.level;
+  }
+  
+  // Increment level
+  async incrementLevel() {
+    if (!this.currentState) return;
+    
+    this.currentState.level += 1;
+    await saveGameState(this.currentState);
+    
+    console.log('Level incremented to:', this.currentState.level);
+    return this.currentState.level;
+  }
+  
+  // Handle winning condition
+  async handleWin() {
+    if (!this.currentState) return;
+    
+    // Update score by 10 points
+    const newScore = await this.updateScore(10);
+    
+    // Increment level
+    const newLevel = await this.incrementLevel();
+    
+    // Generate new cards after a delay
+    setTimeout(async () => {
+      const cardValues = fiveNumberGenerator();
+      this.currentState = createNewGameState(cardValues);
+      this.currentState.score = newScore; // Preserve score
+      this.currentState.level = newLevel; // Preserve level
+      
+      await saveGameState(this.currentState);
+      
+      // Trigger UI update
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('gameStateUpdated', {
+          detail: this.currentState
+        }));
+      }
+    }, 1500); // Wait 1.5 seconds before generating new cards
+    
+    return { score: newScore, level: newLevel };
   }
 
   // Get card by ID
