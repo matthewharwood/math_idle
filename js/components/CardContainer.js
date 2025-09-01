@@ -104,6 +104,10 @@ export class CardContainer extends HTMLElement {
         lastX = e.clientX;
         lastY = e.clientY;
         
+        // Enable 3D perspective on container
+        this.style.perspective = '1000px';
+        this.style.transition = 'none';
+        
         // Add visual feedback to slots
         this.querySelectorAll('card-slot').forEach(slot => {
           slot.classList.add('drop-ready');
@@ -131,9 +135,23 @@ export class CardContainer extends HTMLElement {
         card.style.left = `${x}px`;
         card.style.top = `${y}px`;
         
+        // Calculate container tilt based on mouse position
+        const containerRect = this.getBoundingClientRect();
+        const centerX = containerRect.width / 2;
+        const centerY = containerRect.height / 2;
+        const mouseX = e.clientX - containerRect.left;
+        const mouseY = e.clientY - containerRect.top;
+        
+        // Calculate tilt angles (max 5 degrees)
+        const tiltX = ((mouseY - centerY) / centerY) * -5;
+        const tiltY = ((mouseX - centerX) / centerX) * 5;
+        
+        // Apply 3D transform and elevated shadow
+        this.style.transform = `rotateX(${tiltX}deg) rotateY(${tiltY}deg) translateZ(10px)`;
+        this.style.boxShadow = `${tiltY * 2}px ${tiltX * 2}px 30px rgba(0, 0, 0, 0.2), 0 10px 40px rgba(0, 0, 0, 0.15)`;
+        
         // Check for snap preview and swap target
         const rect = card.getBoundingClientRect();
-        const containerRect = this.getBoundingClientRect();
         const cardCenterX = rect.left + rect.width / 2 - containerRect.left;
         const cardCenterY = rect.top + rect.height / 2 - containerRect.top;
         
@@ -184,6 +202,17 @@ export class CardContainer extends HTMLElement {
         card.removeAttribute('dragging');
         card.removeAttribute('snap-preview');
         card.style.removeProperty('--drag-rotation');
+        
+        // Ease container back to normal with smooth transition
+        this.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        this.style.transform = 'rotateX(0deg) rotateY(0deg) translateZ(0px)';
+        this.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+        
+        // Reset perspective after animation
+        setTimeout(() => {
+          this.style.perspective = '';
+          this.style.transition = '';
+        }, 500);
         
         // Clear swap target
         this.querySelectorAll('card-element[swap-target]').forEach(c => {
@@ -373,6 +402,8 @@ export class CardContainer extends HTMLElement {
           border-radius: 12px;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
           position: relative;
+          transform-style: preserve-3d;
+          will-change: transform, box-shadow;
         }
         
         .container {
