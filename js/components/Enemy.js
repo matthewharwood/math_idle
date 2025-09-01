@@ -58,6 +58,7 @@ export class Enemy extends HTMLElement {
       this.currentEnemy = { ...enemy };
       this.currentHealth = enemy.health;
     }
+    // If same enemy, keep current health (don't reset)
 
     this.updateDisplay();
   }
@@ -322,6 +323,7 @@ export class Enemy extends HTMLElement {
       this.currentEnemy = state.enemy;
       this.currentHealth = state.currentHealth;
       this.updateDisplay();
+      console.log(`Enemy state restored: ${this.currentEnemy.name} with ${this.currentHealth}/${this.currentEnemy.health} HP`);
     }
   }
 

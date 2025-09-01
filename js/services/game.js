@@ -174,6 +174,9 @@ class GameManager {
       
       // Update game state with new enemy health
       this.currentState.enemy.currentHealth = this.enemyComponent.currentHealth;
+      
+      // Save the updated health immediately to persist it
+      await saveGameState(this.currentState);
     }
     
     let levelIncreased = false;
@@ -362,7 +365,17 @@ class GameManager {
    */
   updateEnemyComponent() {
     if (this.enemyComponent && this.currentState?.enemy) {
-      this.enemyComponent.setState(this.currentState.enemy);
+      // Only update if the enemy data has changed
+      const componentEnemy = this.enemyComponent.currentEnemy;
+      const stateEnemy = this.currentState.enemy.enemy;
+      
+      if (!componentEnemy || componentEnemy.level !== stateEnemy.level) {
+        this.enemyComponent.setState(this.currentState.enemy);
+      } else {
+        // Same enemy, just sync health
+        this.enemyComponent.currentHealth = this.currentState.enemy.currentHealth;
+        this.enemyComponent.updateDisplay();
+      }
     }
   }
 
