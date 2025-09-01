@@ -2,6 +2,9 @@
 import './components/Card.js';
 import './components/CardSlot.js';
 import './components/CardContainer.js';
+import './components/SettingsButton.js';
+import './components/SideDrawer.js';
+import './components/GameButton.js';
 
 // Import game manager
 import gameManager from './services/game.js';
@@ -105,15 +108,17 @@ function setupCardSwapListeners() {
     updateScoreDisplay({ score: result.score, level: result.level });
   });
   
-  // Set up new game button
-  const newGameBtn = document.getElementById('new-game-btn');
+  // Set up new game button (now a web component)
+  const newGameBtn = document.querySelector('game-button[action="new-game"]');
   if (newGameBtn) {
-    newGameBtn.addEventListener('click', async () => {
-      if (confirm('Start a new game? Current progress will be lost.')) {
-        await gameManager.newGame();
-        const newState = gameManager.getState();
-        updateUIFromGameState(newState);
-        updateScoreDisplay(newState);
+    newGameBtn.addEventListener('game-action', async (event) => {
+      if (event.detail.action === 'new-game') {
+        if (confirm('Start a new game? Current progress will be lost.')) {
+          await gameManager.newGame();
+          const newState = gameManager.getState();
+          updateUIFromGameState(newState);
+          updateScoreDisplay(newState);
+        }
       }
     });
   }
@@ -125,9 +130,13 @@ function updateScoreDisplay(gameState) {
   
   const scoreEl = document.getElementById('score');
   const levelEl = document.getElementById('level');
+  const drawerScoreEl = document.getElementById('drawer-score');
+  const drawerLevelEl = document.getElementById('drawer-level');
   
   if (scoreEl) scoreEl.textContent = gameState.score || 0;
   if (levelEl) levelEl.textContent = gameState.level || 1;
+  if (drawerScoreEl) drawerScoreEl.textContent = gameState.score || 0;
+  if (drawerLevelEl) drawerLevelEl.textContent = gameState.level || 1;
 }
 
 // Listen for game state updates

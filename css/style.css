@@ -73,6 +73,8 @@ body {
   margin: 0;
   padding: var(--space-10);
   font-family: system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, var(--color-gray-100) 0%, var(--color-gray-200) 100%);
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -85,9 +87,172 @@ card-container {
   margin: 0 auto;
 }
 
-.game-controls {
-  margin-top: var(--space-8);
+/* Settings Button */
+.settings-button {
+  position: fixed;
+  top: var(--space-4);
+  right: var(--space-4);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--surface-elev);
+  border: 2px solid var(--border);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  z-index: 1000;
+}
+
+.settings-button:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+  transform: rotate(45deg);
+}
+
+.settings-button:active {
+  transform: rotate(45deg) scale(0.95);
+}
+
+.settings-button svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Side Drawer */
+.side-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 33%;
+  min-width: 320px;
+  max-width: 480px;
+  height: 100vh;
+  background: var(--surface-elev);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+}
+
+.side-drawer.open {
+  transform: translateX(0);
+}
+
+/* Drawer Overlay */
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  z-index: 1999;
+}
+
+.drawer-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Drawer Header */
+.drawer-header {
+  padding: var(--space-6);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.drawer-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.close-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.close-button:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.close-button svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Drawer Content */
+.drawer-content {
+  flex: 1;
+  padding: var(--space-6);
+  overflow-y: auto;
+}
+
+.drawer-section {
+  margin-bottom: var(--space-8);
+}
+
+.drawer-section h3 {
+  margin: 0 0 var(--space-4) 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.stat-item {
+  background: var(--surface);
+  padding: var(--space-4);
+  border-radius: 8px;
   text-align: center;
+}
+
+.stat-label {
+  display: block;
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-2);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.stat-value {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent);
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
 .game-button {
@@ -114,24 +279,44 @@ card-container {
   box-shadow: var(--shadow-xs);
 }
 
-.game-info {
-  margin-top: var(--space-4);
+/* Game Info Bar */
+.game-info-bar {
+  position: fixed;
+  bottom: var(--space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface-elev);
+  padding: var(--space-3) var(--space-6);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
   display: flex;
-  justify-content: center;
   gap: var(--space-8);
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 18px;
   color: var(--text);
   font-weight: 600;
+  z-index: 100;
 }
 
-.game-info span {
-  display: inline-block;
-}
-
-#score, #level {
+.game-info-bar #score,
+.game-info-bar #level,
+#drawer-score,
+#drawer-level {
   color: var(--accent);
   font-weight: 700;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .side-drawer {
+    width: 80%;
+    min-width: 280px;
+  }
+  
+  .game-info-bar {
+    font-size: 16px;
+    padding: var(--space-2) var(--space-4);
+  }
 }
 
 @media (max-width: 640px) {
