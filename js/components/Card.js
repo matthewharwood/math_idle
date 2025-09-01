@@ -6,7 +6,7 @@ export class Card extends HTMLElement {
   }
   
   static get observedAttributes() {
-    return ['label', 'card-type', 'data-slot-index'];
+    return ['label', 'card-type', 'data-slot-index', 'dragging', 'snap-preview', 'drop-success'];
   }
   
   attributeChangedCallback(name, oldValue, newValue) {
@@ -53,17 +53,59 @@ export class Card extends HTMLElement {
           }
         }
         
-        /* Hover state */
+        /* Hover state - 5deg rotation */
         :host(:hover) {
           box-shadow: var(--shadow);
-          transform: translateY(-2px);
+          transform: translateY(-2px) rotate(5deg);
         }
         
-        /* Active/dragging state */
+        /* Active/press state - maintains rotation with scale */
         :host(:active) {
           box-shadow: var(--shadow-lg);
-          transform: scale(1.02);
+          transform: scale(0.98) rotate(5deg);
           border-radius: 12px;
+        }
+        
+        /* Dragging state - floating with rotation */
+        :host([dragging]) {
+          box-shadow: var(--shadow-xl), 0 0 0 2px var(--accent);
+          transform: scale(1.08) rotate(var(--drag-rotation, 0deg)) translateY(-5px);
+          outline: 2px dashed var(--accent);
+          outline-offset: -2px;
+          opacity: 0.9;
+          filter: saturate(1.2);
+          transition: none;
+          z-index: 1000 !important;
+        }
+        
+        /* Snap preview - magnetic guidance without rotation */
+        :host([snap-preview]) {
+          transform: scale(1.02);
+          box-shadow: var(--shadow), 0 0 0 2px var(--success);
+          transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+        }
+        
+        /* Drop success - bounce animation */
+        :host([drop-success]) {
+          animation: dropBounce 0.4s ease-out;
+        }
+        
+        @keyframes dropBounce {
+          0% {
+            transform: scale(1.05) translateY(-10px);
+          }
+          40% {
+            transform: scale(0.95) translateY(0);
+          }
+          60% {
+            transform: scale(1.02) translateY(-5px);
+          }
+          80% {
+            transform: scale(0.98) translateY(0);
+          }
+          100% {
+            transform: scale(1) translateY(0);
+          }
         }
         
         /* Invisible hit area for easier interaction */

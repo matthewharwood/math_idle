@@ -78,20 +78,28 @@ export class CardContainer extends HTMLElement {
       let startY = 0;
       let initialX = 0;
       let initialY = 0;
+      let lastX = 0;
+      let lastY = 0;
+      let velocityX = 0;
+      let velocityY = 0;
       
       const handleMouseDown = (e) => {
         isDragging = true;
         card.style.zIndex = '1000';
         card.style.cursor = 'grabbing';
+        card.setAttribute('dragging', '');
         
-        // Get initial positions
+        // Get current card position
         const rect = card.getBoundingClientRect();
         const containerRect = this.getBoundingClientRect();
-        initialX = rect.left - containerRect.left;
-        initialY = rect.top - containerRect.top;
+        const currentX = rect.left - containerRect.left;
+        const currentY = rect.top - containerRect.top;
         
-        startX = e.clientX - initialX;
-        startY = e.clientY - initialY;
+        // Calculate offset from click point to card top-left
+        startX = e.clientX - currentX;
+        startY = e.clientY - currentY;
+        lastX = e.clientX;
+        lastY = e.clientY;
         
         // Add visual feedback to slots
         this.querySelectorAll('card-slot').forEach(slot => {
@@ -107,8 +115,48 @@ export class CardContainer extends HTMLElement {
         const x = e.clientX - startX;
         const y = e.clientY - startY;
         
+        // Calculate velocity for rotation
+        velocityX = e.clientX - lastX;
+        velocityY = e.clientY - lastY;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        
+        // Apply rotation based on horizontal velocity
+        const rotation = Math.max(-15, Math.min(15, velocityX * 0.5));
+        card.style.setProperty('--drag-rotation', `${rotation}deg`);
+        
         card.style.left = `${x}px`;
         card.style.top = `${y}px`;
+        
+        // Check for snap preview
+        const rect = card.getBoundingClientRect();
+        const containerRect = this.getBoundingClientRect();
+        const cardCenterX = rect.left + rect.width / 2 - containerRect.left;
+        const cardCenterY = rect.top + rect.height / 2 - containerRect.top;
+        
+        let nearestSlot = null;
+        let minDistance = Infinity;
+        
+        this.state.forEach((slotState, index) => {
+          const slotCenterX = slotState.x + 32;
+          const slotCenterY = slotState.y + 55;
+          const distance = Math.sqrt(
+            Math.pow(cardCenterX - slotCenterX, 2) + 
+            Math.pow(cardCenterY - slotCenterY, 2)
+          );
+          
+          if (distance < minDistance) {
+            minDistance = distance;
+            nearestSlot = index;
+          }
+        });
+        
+        // Show snap preview if close enough
+        if (minDistance < 50) {
+          card.setAttribute('snap-preview', '');
+        } else {
+          card.removeAttribute('snap-preview');
+        }
       };
       
       const handleMouseUp = (e) => {
@@ -116,6 +164,9 @@ export class CardContainer extends HTMLElement {
         isDragging = false;
         card.style.cursor = 'move';
         card.style.zIndex = '10';
+        card.removeAttribute('dragging');
+        card.removeAttribute('snap-preview');
+        card.style.removeProperty('--drag-rotation');
         
         // Remove visual feedback
         this.querySelectorAll('card-slot').forEach(slot => {
@@ -145,28 +196,70 @@ export class CardContainer extends HTMLElement {
           }
         });
         
+        // Add drop success animation
+        card.setAttribute('drop-success', '');
+        setTimeout(() => {
+          card.removeAttribute('drop-success');
+        }, 400);
+        
         // Perform swap if needed
         this.handleCardDrop(card, nearestSlot);
       };
       
-      card.addEventListener('mousedown', handleMouseDown);
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      // Use pointer events for unified mouse/touch handling
+      card.style.touchAction = 'none'; // Prevent browser touch gestures
       
-      // Touch support
-      card.addEventListener('touchstart', (e) => {
-        const touch = e.touches[0];
-        handleMouseDown({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => e.preventDefault() });
+      card.addEventListener('pointerdown', (e) => {
+        card.setPointerCapture(e.pointerId); // Capture all pointer events
+        handleMouseDown(e);
       });
       
-      document.addEventListener('touchmove', (e) => {
-        const touch = e.touches[0];
-        handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
+      card.addEventListener('pointermove', (e) => {
+        if (isDragging) {
+          handleMouseMove(e);
+        }
       });
       
-      document.addEventListener('touchend', (e) => {
-        handleMouseUp(e);
+      card.addEventListener('pointerup', (e) => {
+        if (isDragging) {
+          handleMouseUp(e);
+          card.releasePointerCapture(e.pointerId);
+        }
       });
+      
+      card.addEventListener('pointercancel', (e) => {
+        if (isDragging) {
+          handleMouseUp(e);
+          card.releasePointerCapture(e.pointerId);
+        }
+      });
+      
+      // Fallback for older browsers
+      if (!window.PointerEvent) {
+        card.addEventListener('mousedown', handleMouseDown);
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+        
+        card.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          const touch = e.touches[0];
+          handleMouseDown({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => {} });
+        }, { passive: false });
+        
+        document.addEventListener('touchmove', (e) => {
+          if (isDragging) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
+          }
+        }, { passive: false });
+        
+        document.addEventListener('touchend', (e) => {
+          if (isDragging) {
+            handleMouseUp(e);
+          }
+        });
+      }
     });
   }
   
