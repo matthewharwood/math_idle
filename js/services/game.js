@@ -6,12 +6,14 @@ import {
   swapCards 
 } from './storage.js';
 import { createRandomNumberGenerator } from '../utils/generate-random-numbers.js';
+import { enemies } from '../data/enemies-generated.js';
 
 class GameManager {
   constructor() {
     this.currentState = null;
     this.container = null;
     this.isInitialized = false;
+    this.enemyComponent = null;
   }
 
   // Initialize the game
@@ -31,6 +33,8 @@ class GameManager {
       const numberGenerator = createRandomNumberGenerator(cardCount, 0, numberRange);
       const cardValues = numberGenerator();
       this.currentState = createNewGameState(cardValues, cardCount, numberRange);
+      // Initialize enemy state
+      this.initializeEnemy();
       await saveGameState(this.currentState);
     }
     
@@ -53,6 +57,9 @@ class GameManager {
     const numberGenerator = createRandomNumberGenerator(count, 0, range);
     const cardValues = numberGenerator();
     this.currentState = createNewGameState(cardValues, count, range);
+    
+    // Initialize enemy for level 1
+    this.initializeEnemy();
     
     // Save the new state
     await saveGameState(this.currentState);
@@ -152,15 +159,24 @@ class GameManager {
     return this.currentState.level;
   }
   
-  // Handle winning condition
+  // Handle winning condition (now deals damage to enemy)
   async handleWin() {
     if (!this.currentState) return;
     
-    // Update score by 10 points
-    const newScore = await this.updateScore(10);
+    // Calculate damage from card values
+    const cardValues = this.getCardsInOrder().map(c => c.value);
+    const totalDamage = cardValues.reduce((sum, value) => sum + value, 0);
     
-    // Increment level
-    const newLevel = await this.incrementLevel();
+    // Deal damage to enemy
+    const enemyDefeated = this.dealDamageToEnemy(totalDamage);
+    
+    let levelIncreased = false;
+    if (enemyDefeated) {
+      // Enemy defeated - level up and get new enemy
+      await this.incrementLevel();
+      this.initializeEnemy();
+      levelIncreased = true;
+    }
     
     // Generate new cards after fall animation completes
     setTimeout(async () => {
@@ -169,11 +185,20 @@ class GameManager {
       const numberGenerator = createRandomNumberGenerator(cardCount, 0, numberRange);
       const cardValues = numberGenerator();
       
+      // Preserve current game state
+      const currentScore = this.currentState.score;
+      const currentLevel = this.currentState.level;
+      const currentEnemy = this.currentState.enemy;
+      
       this.currentState = createNewGameState(cardValues, cardCount, numberRange);
-      this.currentState.score = newScore; // Preserve score
-      this.currentState.level = newLevel; // Preserve level
+      this.currentState.score = currentScore;
+      this.currentState.level = currentLevel;
+      this.currentState.enemy = currentEnemy;
       
       await saveGameState(this.currentState);
+      
+      // Update enemy component
+      this.updateEnemyComponent();
       
       // Trigger UI update
       if (typeof window !== 'undefined') {
@@ -181,9 +206,13 @@ class GameManager {
           detail: this.currentState
         }));
       }
-    }, 400); // Wait for fall animation to complete (320ms + buffer)
+    }, 400);
     
-    return { score: newScore, level: newLevel };
+    return { 
+      damage: totalDamage, 
+      enemyDefeated, 
+      levelIncreased 
+    };
   }
 
   // Get card by ID
@@ -224,6 +253,93 @@ class GameManager {
     }
     
     return this.currentState;
+  }
+
+  // Enemy management methods
+  
+  /**
+   * Get enemy by level from generated data
+   */
+  getEnemyByLevel(level) {
+    // First try to find exact match
+    let enemy = enemies.find(e => e.level === level);
+    
+    // If no exact match, find the closest lower level enemy
+    if (!enemy) {
+      const lowerEnemies = enemies.filter(e => e.level <= level);
+      if (lowerEnemies.length > 0) {
+        enemy = lowerEnemies[lowerEnemies.length - 1];
+      } else {
+        // Default to first enemy if level is too low
+        enemy = enemies[0];
+      }
+    }
+    
+    return enemy;
+  }
+
+  /**
+   * Initialize enemy for current level
+   */
+  initializeEnemy() {
+    if (!this.currentState) return;
+    
+    const enemy = this.getEnemyByLevel(this.currentState.level);
+    if (!enemy) return;
+    
+    this.currentState.enemy = {
+      enemy: { ...enemy },
+      currentHealth: enemy.health
+    };
+    
+    console.log(`Initialized enemy: ${enemy.name} (Level ${enemy.level})`);
+  }
+
+  /**
+   * Deal damage to current enemy
+   */
+  dealDamageToEnemy(damage) {
+    if (!this.currentState?.enemy) return false;
+    
+    const oldHealth = this.currentState.enemy.currentHealth;
+    this.currentState.enemy.currentHealth = Math.max(0, oldHealth - damage);
+    
+    console.log(`Dealt ${damage} damage to ${this.currentState.enemy.enemy.name}`);
+    console.log(`Health: ${oldHealth} → ${this.currentState.enemy.currentHealth}`);
+    
+    // Check if enemy is defeated
+    const defeated = this.currentState.enemy.currentHealth <= 0;
+    
+    if (defeated) {
+      const reward = this.currentState.enemy.enemy.reward;
+      this.currentState.score += reward;
+      console.log(`Enemy defeated! Earned ${reward} points`);
+    }
+    
+    return defeated;
+  }
+
+  /**
+   * Set enemy component reference
+   */
+  setEnemyComponent(component) {
+    this.enemyComponent = component;
+  }
+
+  /**
+   * Update enemy component display
+   */
+  updateEnemyComponent() {
+    if (this.enemyComponent && this.currentState?.enemy) {
+      this.enemyComponent.setState(this.currentState.enemy);
+    }
+  }
+
+  /**
+   * Get current enemy state
+   */
+  getCurrentEnemy() {
+    return this.currentState?.enemy || null;
   }
 }
 

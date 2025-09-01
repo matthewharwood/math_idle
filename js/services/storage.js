@@ -20,10 +20,11 @@ async function initDB() {
 export const Game = {
   cards: [],        // Array of card objects with {id, value, slotIndex}
   score: 0,         // Current game score
-  level: 1,         // Current game level
+  level: 1,         // Current game level (now represents enemy level)
   cardCount: 5,     // Number of cards (difficulty)
   numberRange: 10,  // Maximum number range
   timestamp: null,  // Last save timestamp
+  enemy: null,      // Current enemy state {enemy, currentHealth}
 };
 
 // Save game state to IndexedDB
@@ -115,7 +116,8 @@ export function createNewGameState(cardValues, cardCount = 5, numberRange = 10) 
     level: 1,
     cardCount: cardCount,
     numberRange: numberRange,
-    timestamp: Date.now()
+    timestamp: Date.now(),
+    enemy: null // Will be initialized by game manager
   };
 }
 

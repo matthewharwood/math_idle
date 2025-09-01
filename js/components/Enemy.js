@@ -1,0 +1,375 @@
+/**
+ * Enemy WebComponent
+ * Displays current enemy based on player level with health bar and image
+ */
+
+import { enemies } from '../data/enemies-generated.js';
+
+export class Enemy extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.currentEnemy = null;
+    this.currentHealth = 0;
+  }
+
+  connectedCallback() {
+    this.render();
+    this.loadEnemyState();
+  }
+
+  /**
+   * Get enemy by level from generated data
+   */
+  getEnemyByLevel(level) {
+    // First try to find exact match
+    let enemy = enemies.find(e => e.level === level);
+    
+    // If no exact match, find the closest lower level enemy
+    if (!enemy) {
+      const lowerEnemies = enemies.filter(e => e.level <= level);
+      if (lowerEnemies.length > 0) {
+        enemy = lowerEnemies[lowerEnemies.length - 1];
+      } else {
+        // Default to first enemy if level is too low
+        enemy = enemies[0];
+      }
+    }
+    
+    return enemy;
+  }
+
+  /**
+   * Load enemy state for current level
+   */
+  async loadEnemyState() {
+    const level = parseInt(this.getAttribute('level') || '1');
+    const enemy = this.getEnemyByLevel(level);
+    
+    if (!enemy) {
+      console.error(`No enemy found for level ${level}`);
+      return;
+    }
+
+    // Check if this is a new enemy or continuing previous battle
+    if (!this.currentEnemy || this.currentEnemy.level !== enemy.level) {
+      // New enemy - reset to full health
+      this.currentEnemy = { ...enemy };
+      this.currentHealth = enemy.health;
+    }
+
+    this.updateDisplay();
+  }
+
+  /**
+   * Deal damage to current enemy
+   */
+  takeDamage(damage) {
+    if (!this.currentEnemy) return false;
+
+    this.currentHealth = Math.max(0, this.currentHealth - damage);
+    this.updateDisplay();
+
+    // Check if enemy is defeated
+    if (this.currentHealth <= 0) {
+      this.enemyDefeated();
+      return true; // Enemy defeated
+    }
+
+    return false; // Enemy still alive
+  }
+
+  /**
+   * Handle enemy defeat
+   */
+  enemyDefeated() {
+    // Dispatch custom event for enemy defeat
+    this.dispatchEvent(new CustomEvent('enemy-defeated', {
+      bubbles: true,
+      detail: {
+        enemy: this.currentEnemy,
+        reward: this.currentEnemy.reward
+      }
+    }));
+
+    // Victory animation
+    this.playDefeatAnimation();
+  }
+
+  /**
+   * Play defeat animation
+   */
+  playDefeatAnimation() {
+    const enemyImage = this.shadowRoot.querySelector('.enemy-image');
+    if (enemyImage) {
+      enemyImage.classList.add('defeated');
+      
+      setTimeout(() => {
+        enemyImage.classList.remove('defeated');
+      }, 1000);
+    }
+  }
+
+  /**
+   * Update enemy level (called externally)
+   */
+  setLevel(level) {
+    this.setAttribute('level', level);
+    this.loadEnemyState();
+  }
+
+  /**
+   * Get current enemy health percentage
+   */
+  getHealthPercentage() {
+    if (!this.currentEnemy) return 100;
+    return (this.currentHealth / this.currentEnemy.health) * 100;
+  }
+
+  /**
+   * Update display with current enemy state
+   */
+  updateDisplay() {
+    if (!this.currentEnemy) return;
+
+    const nameEl = this.shadowRoot.querySelector('.enemy-name');
+    const levelEl = this.shadowRoot.querySelector('.enemy-level');
+    const imageEl = this.shadowRoot.querySelector('.enemy-image');
+    const healthBarEl = this.shadowRoot.querySelector('.health-fill');
+    const healthTextEl = this.shadowRoot.querySelector('.health-text');
+
+    if (nameEl) nameEl.textContent = this.currentEnemy.name;
+    if (levelEl) levelEl.textContent = `Level ${this.currentEnemy.level}`;
+    if (imageEl) imageEl.src = this.currentEnemy.imgsrc;
+    
+    if (healthBarEl) {
+      const percentage = this.getHealthPercentage();
+      healthBarEl.style.width = `${percentage}%`;
+      
+      // Change color based on health
+      if (percentage > 60) {
+        healthBarEl.style.backgroundColor = 'var(--success)';
+      } else if (percentage > 30) {
+        healthBarEl.style.backgroundColor = 'var(--accent)';
+      } else {
+        healthBarEl.style.backgroundColor = 'var(--danger)';
+      }
+    }
+
+    if (healthTextEl) {
+      healthTextEl.textContent = `${this.formatNumber(this.currentHealth)} / ${this.formatNumber(this.currentEnemy.health)}`;
+    }
+  }
+
+  /**
+   * Format large numbers for display
+   */
+  formatNumber(num) {
+    if (num < 1000) return num.toString();
+    if (num < 1000000) return (num / 1000).toFixed(1) + 'K';
+    if (num < 1000000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num < 1000000000000) return (num / 1000000000).toFixed(1) + 'B';
+    return num.toExponential(2);
+  }
+
+  /**
+   * Get current enemy state for persistence
+   */
+  getState() {
+    return {
+      enemy: this.currentEnemy,
+      currentHealth: this.currentHealth
+    };
+  }
+
+  /**
+   * Restore enemy state from persistence
+   */
+  setState(state) {
+    if (state && state.enemy) {
+      this.currentEnemy = state.enemy;
+      this.currentHealth = state.currentHealth;
+      this.updateDisplay();
+    }
+  }
+
+  render() {
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          display: block;
+          --enemy-width: 300px;
+          --enemy-height: 400px;
+        }
+
+        .enemy-container {
+          width: var(--enemy-width);
+          background: var(--surface-elev);
+          border: 2px solid var(--border);
+          border-radius: 16px;
+          padding: var(--space-4);
+          box-shadow: var(--shadow);
+          text-align: center;
+          font-family: var(--font-sans);
+        }
+
+        .enemy-header {
+          margin-bottom: var(--space-4);
+        }
+
+        .enemy-name {
+          font-size: 24px;
+          font-weight: 700;
+          color: var(--text);
+          margin: 0 0 var(--space-2) 0;
+          font-family: var(--font-display);
+        }
+
+        .enemy-level {
+          font-size: 16px;
+          color: var(--text-muted);
+          margin: 0;
+          font-family: var(--font-mono);
+        }
+
+        .enemy-image-container {
+          width: 200px;
+          height: 200px;
+          margin: 0 auto var(--space-4);
+          border-radius: 12px;
+          overflow: hidden;
+          border: 2px solid var(--border);
+          background: var(--surface);
+        }
+
+        .enemy-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: all 0.3s ease;
+        }
+
+        .enemy-image.defeated {
+          filter: grayscale(100%) brightness(0.5);
+          transform: scale(0.9);
+        }
+
+        .health-bar-container {
+          margin-bottom: var(--space-3);
+        }
+
+        .health-bar-label {
+          font-size: 14px;
+          color: var(--text-muted);
+          margin-bottom: var(--space-2);
+          display: block;
+        }
+
+        .health-bar {
+          width: 100%;
+          height: 12px;
+          background: var(--surface);
+          border-radius: 6px;
+          overflow: hidden;
+          border: 1px solid var(--border);
+        }
+
+        .health-fill {
+          height: 100%;
+          background: var(--success);
+          transition: width 0.5s ease, background-color 0.3s ease;
+          border-radius: 6px;
+        }
+
+        .health-text {
+          font-size: 12px;
+          color: var(--text-muted);
+          margin-top: var(--space-2);
+          font-family: var(--font-mono);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+          :host {
+            --enemy-width: 280px;
+            --enemy-height: 360px;
+          }
+
+          .enemy-image-container {
+            width: 160px;
+            height: 160px;
+          }
+
+          .enemy-name {
+            font-size: 20px;
+          }
+        }
+
+        /* Animations */
+        .enemy-container {
+          animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .health-fill {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .health-fill::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+          animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+          0% {
+            left: -100%;
+          }
+          100% {
+            left: 100%;
+          }
+        }
+      </style>
+
+      <div class="enemy-container">
+        <div class="enemy-header">
+          <h2 class="enemy-name">Loading...</h2>
+          <p class="enemy-level">Level 1</p>
+        </div>
+
+        <div class="enemy-image-container">
+          <img class="enemy-image" src="" alt="Enemy" />
+        </div>
+
+        <div class="health-bar-container">
+          <span class="health-bar-label">Health</span>
+          <div class="health-bar">
+            <div class="health-fill"></div>
+          </div>
+          <div class="health-text">0 / 0</div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+// Register the custom element
+if (!customElements.get('game-enemy')) {
+  customElements.define('game-enemy', Enemy);
+}

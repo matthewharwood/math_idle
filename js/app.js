@@ -8,6 +8,7 @@ import './components/GameButton.js';
 import './components/ThemeButton.js';
 import './components/DifficultyControl.js';
 import './components/RangeControl.js';
+import './components/Enemy.js';
 
 // Import services
 import gameManager from './services/game.js';
@@ -27,6 +28,9 @@ async function initializeGame() {
     
     // Update score display
     updateScoreDisplay(gameState);
+    
+    // Initialize enemy system
+    initializeEnemySystem(gameState);
     
     // Set up event listeners for card swaps
     setupCardSwapListeners();
@@ -113,9 +117,15 @@ function setupCardSwapListeners() {
     const { values, sortOrder } = event.detail;
     console.log(`Container won! Order: ${sortOrder}, Values: ${values}`);
     
-    // Update score and level
+    // Handle win (deals damage to enemy)
     const result = await gameManager.handleWin();
-    updateScoreDisplay({ score: result.score, level: result.level });
+    
+    // Update enemy display
+    updateEnemyDisplay(gameManager.getCurrentEnemy(), result);
+    
+    // Update score and level display
+    const currentState = gameManager.getState();
+    updateScoreDisplay(currentState);
   });
   
   // Set up new game button (now a web component)
@@ -129,6 +139,7 @@ function setupCardSwapListeners() {
           updateUIFromGameState(newState);
           updateScoreDisplay(newState);
           updateDifficultyControls(newState);
+          initializeEnemySystem(newState);
         }
       }
     });
@@ -185,6 +196,57 @@ function updateDifficultyControls(gameState) {
   }
 }
 
+// Initialize enemy system
+function initializeEnemySystem(gameState) {
+  const enemyComponent = document.querySelector('game-enemy');
+  if (!enemyComponent) return;
+  
+  // Set the game manager reference
+  gameManager.setEnemyComponent(enemyComponent);
+  
+  // Initialize enemy if not already done
+  if (!gameState.enemy) {
+    gameManager.initializeEnemy();
+    gameManager.updateEnemyComponent();
+  } else {
+    // Restore enemy state
+    enemyComponent.setState(gameState.enemy);
+  }
+  
+  // Set enemy level
+  enemyComponent.setLevel(gameState.level);
+  
+  console.log('Enemy system initialized');
+}
+
+// Update enemy display
+function updateEnemyDisplay(enemyState, battleResult) {
+  const enemyComponent = document.querySelector('game-enemy');
+  if (!enemyComponent || !enemyState) return;
+  
+  // Update enemy state
+  enemyComponent.setState(enemyState);
+  
+  // Show damage feedback
+  if (battleResult?.damage) {
+    console.log(`Dealt ${battleResult.damage} damage!`);
+    // Could add visual damage feedback here
+  }
+  
+  // Handle enemy defeat
+  if (battleResult?.enemyDefeated) {
+    console.log('Enemy defeated!');
+    // Could add victory celebration here
+  }
+  
+  // Handle level up
+  if (battleResult?.levelIncreased) {
+    console.log('Level up!');
+    const currentState = gameManager.getState();
+    enemyComponent.setLevel(currentState.level);
+  }
+}
+
 // Update score and level display
 function updateScoreDisplay(gameState) {
   if (!gameState) return;
@@ -213,6 +275,13 @@ window.addEventListener('gameStateUpdated', (event) => {
   updateUIFromGameState(gameState);
   updateScoreDisplay(gameState);
   updateDifficultyControls(gameState);
+  
+  // Update enemy display
+  const enemyComponent = document.querySelector('game-enemy');
+  if (enemyComponent && gameState.enemy) {
+    enemyComponent.setState(gameState.enemy);
+    enemyComponent.setLevel(gameState.level);
+  }
   
   // Animate new cards entering
   if (container && container.animateNewCards) {
