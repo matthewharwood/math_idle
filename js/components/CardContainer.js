@@ -20,9 +20,9 @@ export class CardContainer extends HTMLElement {
   }
   
   connectedCallback() {
-    this.render();
     // Wait for next frame to ensure DOM is ready
     requestAnimationFrame(() => {
+      this.render(); // Re-render with correct slot count
       this.initializeState();
       this.setupDragAndDrop();
     });
@@ -234,12 +234,17 @@ export class CardContainer extends HTMLElement {
     const gap = this.getAttribute('gap') || '16px';
     const bgColor = this.getAttribute('bg-color') || '#f7fafc';
     const padding = this.getAttribute('padding') || '20px';
-    const slotHeight = this.getAttribute('slot-height') || '110px';
+    const slotHeight = parseInt(this.getAttribute('slot-height') || '110');
+    const slotWidth = parseInt(this.getAttribute('slot-width') || '64');
+    
+    // Calculate container width based on number of slots
+    const numSlots = this.querySelectorAll('card-slot').length || 3;
+    const containerWidth = (slotWidth * numSlots) + (parseInt(gap) * (numSlots - 1));
     
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          display: block;
+          display: inline-block;
           padding: ${padding};
           background-color: ${bgColor};
           border-radius: 12px;
@@ -249,8 +254,8 @@ export class CardContainer extends HTMLElement {
         
         .container {
           position: relative;
-          min-height: calc(${slotHeight} + 20px);
-          width: 100%;
+          height: ${slotHeight}px;
+          width: ${containerWidth}px;
         }
         
         .title {
