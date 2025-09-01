@@ -11,6 +11,7 @@ export class Enemy extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this.currentEnemy = null;
     this.currentHealth = 0;
+    this.justDefeated = false;
   }
 
   connectedCallback() {
@@ -89,8 +90,11 @@ export class Enemy extends HTMLElement {
    * Handle enemy defeat
    */
   async enemyDefeated() {
-    // Play defeat animation
-    await this.playDefeatAnimation();
+    // Mark as defeated to skip exit animation later
+    this.justDefeated = true;
+    
+    // Play defeat-exit animation (combines defeat effects with exit movement)
+    await this.playDefeatExitAnimation();
     
     // Dispatch custom event for enemy defeat
     this.dispatchEvent(new CustomEvent('enemy-defeated', {
@@ -180,29 +184,20 @@ export class Enemy extends HTMLElement {
   }
 
   /**
-   * Play defeat animation
+   * Play defeat-exit animation (combines defeat effects with sliding out)
    */
-  async playDefeatAnimation() {
+  async playDefeatExitAnimation() {
     const container = this.shadowRoot.querySelector('.enemy-container');
-    const enemyImage = this.shadowRoot.querySelector('.enemy-image');
     
     if (container) {
-      container.classList.add('defeated');
-    }
-    
-    if (enemyImage) {
-      enemyImage.classList.add('defeated');
+      container.classList.add('defeat-exit');
     }
     
     // Wait for animation to complete
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 800));
     
     if (container) {
-      container.classList.remove('defeated');
-    }
-    
-    if (enemyImage) {
-      enemyImage.classList.remove('defeated');
+      container.classList.remove('defeat-exit');
     }
   }
 
@@ -240,7 +235,8 @@ export class Enemy extends HTMLElement {
    * Update enemy level (called externally)
    */
   async setLevel(level, animate = false) {
-    if (animate && this.currentEnemy) {
+    // Only play exit animation if we have an enemy and it wasn't just defeated
+    if (animate && this.currentEnemy && !this.justDefeated) {
       await this.playExitAnimation();
     }
     
@@ -249,6 +245,8 @@ export class Enemy extends HTMLElement {
     
     if (animate) {
       await this.playEnterAnimation();
+      // Clear defeated flag after new enemy enters
+      this.justDefeated = false;
     }
   }
 
@@ -481,8 +479,8 @@ export class Enemy extends HTMLElement {
           animation: enemyExit 0.5s ease-in;
         }
 
-        .enemy-container.defeated {
-          animation: enemyDefeated 1s ease-out;
+        .enemy-container.defeat-exit {
+          animation: defeatExit 0.8s ease-out forwards;
         }
 
         @keyframes fadeIn {
@@ -521,35 +519,29 @@ export class Enemy extends HTMLElement {
           }
         }
 
-        @keyframes enemyDefeated {
+        @keyframes defeatExit {
           0% {
             opacity: 1;
-            transform: scale(1) rotate(0deg);
-            filter: brightness(1);
+            transform: translateX(0) rotate(0deg) scale(1);
+            filter: brightness(1) contrast(1) grayscale(0);
           }
           25% {
-            transform: scale(1.1) rotate(-5deg);
-            filter: brightness(1.5);
+            transform: translateX(10px) rotate(-8deg) scale(1.1);
+            filter: brightness(1.5) contrast(1.2) grayscale(0);
           }
           50% {
-            transform: scale(0.95) rotate(5deg);
-            filter: brightness(0.5) contrast(2);
+            transform: translateX(30px) rotate(15deg) scale(0.95);
+            filter: brightness(0.8) contrast(1.5) grayscale(30%);
           }
           75% {
-            transform: scale(1.05) rotate(-2deg);
-            filter: grayscale(50%) brightness(0.3);
+            transform: translateX(70px) rotate(-5deg) scale(0.85);
+            filter: brightness(0.5) contrast(2) grayscale(70%);
           }
           100% {
-            opacity: 0.7;
-            transform: scale(0.9) rotate(0deg);
-            filter: grayscale(100%) brightness(0.4);
+            opacity: 0;
+            transform: translateX(120%) rotate(20deg) scale(0.7);
+            filter: brightness(0.3) contrast(2) grayscale(100%);
           }
-        }
-
-        .enemy-image.defeated {
-          filter: grayscale(100%) brightness(0.5);
-          transform: scale(0.9);
-          transition: all 0.5s ease;
         }
 
         .health-fill {
