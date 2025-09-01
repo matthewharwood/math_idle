@@ -136,10 +136,10 @@ export class SideDrawer extends HTMLElement {
         
         .drawer-header h2 {
           margin: 0;
-          font-size: 24px;
-          font-weight: 600;
+          font-size: 28px;
+          font-weight: 400;
           color: var(--text, #2d3748);
-          font-family: system-ui, -apple-system, sans-serif;
+          font-family: var(--font-display, 'UnifrakturMaguntia', cursive);
         }
         
         .close-button {

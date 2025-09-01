@@ -35,9 +35,9 @@ export class Card extends HTMLElement {
           display: block;
           width: var(--card-width, 64px);
           height: var(--card-height, 110px);
-          background: var(--card-${cardType}, var(--card-default));
+          background: var(--card-${cardType}, var(--card-default, #4a5568));
           border-radius: 8px;
-          box-shadow: var(--shadow-sm);
+          box-shadow: var(--shadow-sm, 0 2px 6px rgba(0, 0, 0, 0.1));
           cursor: move;
           user-select: none;
           -webkit-user-select: none;
@@ -183,16 +183,17 @@ export class Card extends HTMLElement {
         
         .card-label {
           color: white;
-          font-family: system-ui, -apple-system, sans-serif;
-          font-size: 14px;
-          font-weight: 600;
+          font-family: var(--font-mono, 'Space Mono', monospace);
+          font-size: 16px;
+          font-weight: 700;
           text-align: center;
           margin-bottom: auto;
+          letter-spacing: -0.5px;
         }
         
         @media (max-width: 640px) {
           .card-label {
-            font-size: 16px;
+            font-size: 18px;
           }
         }
         

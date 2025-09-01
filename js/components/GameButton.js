@@ -53,7 +53,7 @@ export class GameButton extends HTMLElement {
           border-radius: 8px;
           font-size: 16px;
           font-weight: 600;
-          font-family: system-ui, -apple-system, sans-serif;
+          font-family: var(--font-sans, 'Space Grotesk', sans-serif);
           cursor: pointer;
           transition: all 0.2s ease;
           box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);

@@ -5,13 +5,18 @@ import './components/CardContainer.js';
 import './components/SettingsButton.js';
 import './components/SideDrawer.js';
 import './components/GameButton.js';
+import './components/ThemeButton.js';
 
-// Import game manager
+// Import services
 import gameManager from './services/game.js';
+import { initializeTheme } from './services/theme.js';
 
 // Initialize game when DOM is ready
 async function initializeGame() {
   try {
+    // Initialize theme first
+    await initializeTheme();
+    
     // Initialize the game state
     const gameState = await gameManager.init();
     

@@ -12,12 +12,23 @@ body {
 }
 
 :root {
-  /* Semantic colors mapped from OKLCH variables */
+  /* Typography */
+  --font-mono: 'Space Mono', monospace;
+  --font-sans: 'Space Grotesk', sans-serif;
+  --font-display: 'UnifrakturMaguntia', cursive;
+}
+
+/* Light Theme (default) */
+:root,
+:root[data-theme="light"] {
+  /* Semantic colors for light theme */
   --surface: var(--color-gray-50);
-  --surface-elev: var(--color-gray-100);
+  --surface-elev: white;
   --text: var(--color-gray-900);
   --text-muted: var(--color-gray-600);
   --border: var(--color-gray-300);
+  --body-bg-start: var(--color-gray-50);
+  --body-bg-end: var(--color-gray-100);
 
   /* Accent colors */
   --accent: var(--color-blue-600);
@@ -29,24 +40,69 @@ body {
   --success: var(--color-emerald-600);
   --success-light: var(--color-emerald-400);
   --success-dark: var(--color-emerald-700);
+  --success-surface: var(--color-emerald-50);
 
   /* Danger colors */
   --danger: var(--color-rose-600);
   --danger-light: var(--color-rose-400);
   --danger-dark: var(--color-rose-700);
 
-  /* Card colors - flat colors with semantic variants */
+  /* Card colors */
   --card-default: var(--color-gray-600);
   --card-accent: var(--color-blue-600);
   --card-success: var(--color-emerald-600);
   --card-danger: var(--color-rose-600);
-
-  /* Shadows */
+  
+  /* Shadows for light theme */
   --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.12);
-  --shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
-  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.20);
-  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.25);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.10);
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.18);
+}
+
+/* Dark Theme */
+:root[data-theme="dark"] {
+  /* Semantic colors for dark theme */
+  --surface: var(--color-gray-800);
+  --surface-elev: var(--color-gray-700);
+  --text: var(--color-gray-100);
+  --text-muted: var(--color-gray-400);
+  --border: var(--color-gray-600);
+  --body-bg-start: var(--color-gray-900);
+  --body-bg-end: var(--color-gray-950);
+
+  /* Accent colors */
+  --accent: var(--color-blue-500);
+  --accent-light: var(--color-blue-400);
+  --accent-dark: var(--color-blue-600);
+  --accent-surface: oklch(30% 0.014 254 / 0.15);
+
+  /* Success colors */
+  --success: var(--color-emerald-500);
+  --success-light: var(--color-emerald-400);
+  --success-dark: var(--color-emerald-600);
+  --success-surface: oklch(30% 0.05 165 / 0.2);
+
+  /* Danger colors */
+  --danger: var(--color-rose-500);
+  --danger-light: var(--color-rose-400);
+  --danger-dark: var(--color-rose-600);
+
+  /* Card colors */
+  --card-default: var(--color-gray-700);
+  --card-accent: var(--color-blue-700);
+  --card-success: var(--color-emerald-700);
+  --card-danger: var(--color-rose-700);
+  
+  /* Shadows for dark theme */
+  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.4);
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.7);
+
+  /* Shadows are now defined in theme-specific sections above */
 
   /* Patterns */
   --pattern-diagonal: repeating-linear-gradient(
@@ -72,13 +128,14 @@ body {
   box-sizing: border-box;
   margin: 0;
   padding: var(--space-10);
-  font-family: system-ui, -apple-system, sans-serif;
-  background: linear-gradient(135deg, var(--color-gray-100) 0%, var(--color-gray-200) 100%);
+  font-family: var(--font-sans);
+  background: linear-gradient(135deg, var(--body-bg-start) 0%, var(--body-bg-end) 100%);
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  transition: background 0.3s ease;
 }
 
 card-container {
@@ -179,7 +236,7 @@ card-container {
   font-size: 24px;
   font-weight: 600;
   color: var(--text);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-display);
 }
 
 .close-button {
@@ -222,7 +279,7 @@ card-container {
   font-size: 18px;
   font-weight: 600;
   color: var(--text);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
 }
 
 /* Stats Grid */
@@ -244,7 +301,7 @@ card-container {
   font-size: 14px;
   color: var(--text-muted);
   margin-bottom: var(--space-2);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .stat-value {
@@ -252,7 +309,7 @@ card-container {
   font-size: 24px;
   font-weight: 700;
   color: var(--accent);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-mono);
 }
 
 .game-button {
@@ -291,7 +348,7 @@ card-container {
   box-shadow: var(--shadow);
   display: flex;
   gap: var(--space-8);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
   font-size: 18px;
   color: var(--text);
   font-weight: 600;
@@ -304,6 +361,7 @@ card-container {
 #drawer-level {
   color: var(--accent);
   font-weight: 700;
+  font-family: var(--font-mono);
 }
 
 /* Mobile Responsive */

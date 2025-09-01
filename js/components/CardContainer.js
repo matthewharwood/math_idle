@@ -536,12 +536,12 @@ export class CardContainer extends HTMLElement {
         }
         
         :host([winning]) {
-          background-color: var(--color-emerald-50);
-          box-shadow: 0 0 20px rgba(16, 185, 129, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1);
+          background-color: var(--success-surface);
+          box-shadow: 0 0 20px rgba(16, 185, 129, 0.2), var(--shadow-sm);
         }
         
         :host([winning]) .sort-order-tag {
-          background: var(--color-emerald-600);
+          background: var(--success);
           color: white;
         }
         
@@ -553,9 +553,9 @@ export class CardContainer extends HTMLElement {
         
         .title {
           margin: 0 0 var(--space-4, 16px) 0;
-          font-family: system-ui, -apple-system, sans-serif;
-          font-size: 18px;
-          font-weight: 600;
+          font-family: var(--font-display, 'UnifrakturMaguntia', cursive);
+          font-size: 28px;
+          font-weight: 400;
           color: var(--text, #2d3748);
           text-align: center;
         }
@@ -587,7 +587,7 @@ export class CardContainer extends HTMLElement {
           color: white;
           padding: 4px 8px;
           border-radius: 4px;
-          font-family: system-ui, -apple-system, sans-serif;
+          font-family: var(--font-mono, 'Space Mono', monospace);
           font-size: 12px;
           font-weight: 700;
           letter-spacing: 0.5px;

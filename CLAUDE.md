@@ -20,4 +20,5 @@ animate('.square', {
 - Any Localstorage MUST use the package `import { openDB, deleteDB, wrap, unwrap } from 'idb';`. WebFetch: `https://github.com/jakearchibald/idb#readme`.
 - For numbers always use mono font-mono
 - for text use sans-serif --font-sans
-- for titles use --font-display
+- for titles use --font-display.
+- All styles MUST go into `css/styles.css`.
