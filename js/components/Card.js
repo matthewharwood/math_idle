@@ -6,7 +6,7 @@ export class Card extends HTMLElement {
   }
   
   static get observedAttributes() {
-    return ['label', 'width', 'height', 'bg-color', 'text-color', 'draggable'];
+    return ['label', 'width', 'height', 'bg-color', 'text-color', 'data-slot-index'];
   }
   
   attributeChangedCallback(name, oldValue, newValue) {
@@ -16,27 +16,13 @@ export class Card extends HTMLElement {
   }
   
   connectedCallback() {
-    const isDraggable = this.getAttribute('draggable') === 'true';
-    if (isDraggable) {
-      this.draggable = true;
-      this.addEventListener('dragstart', this.handleDragStart);
-      this.addEventListener('dragend', this.handleDragEnd);
+    this.render();
+    // Ensure card has an ID for state tracking
+    if (!this.id) {
+      const label = this.getAttribute('label') || 'card';
+      const timestamp = Date.now();
+      this.id = `${label.toLowerCase().replace(/\s+/g, '-')}-${timestamp}`;
     }
-  }
-  
-  disconnectedCallback() {
-    this.removeEventListener('dragstart', this.handleDragStart);
-    this.removeEventListener('dragend', this.handleDragEnd);
-  }
-  
-  handleDragStart = (e) => {
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', this.outerHTML);
-    this.style.opacity = '0.4';
-  }
-  
-  handleDragEnd = () => {
-    this.style.opacity = '1';
   }
   
   render() {
@@ -55,17 +41,15 @@ export class Card extends HTMLElement {
           background: ${bgColor};
           border-radius: 8px;
           box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-          cursor: ${this.getAttribute('draggable') === 'true' ? 'move' : 'pointer'};
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        
-        :host(:hover) {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-        }
-        
-        :host([draggable="true"]) {
           cursor: move;
+          user-select: none;
+          -webkit-user-select: none;
+          transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        
+        :host(:active) {
+          box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+          transform: scale(1.05);
         }
         
         .card-content {
@@ -81,10 +65,41 @@ export class Card extends HTMLElement {
           padding: 8px;
           box-sizing: border-box;
           text-align: center;
+          pointer-events: none;
+        }
+        
+        .card-inner {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+        
+        .card-shine {
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.2),
+            transparent
+          );
+          transition: left 0.5s ease;
+        }
+        
+        :host(:hover) .card-shine {
+          left: 100%;
         }
       </style>
-      <div class="card-content">
-        <slot>${label}</slot>
+      <div class="card-inner">
+        <div class="card-shine"></div>
+        <div class="card-content">
+          <slot>${label}</slot>
+        </div>
       </div>
     `;
   }

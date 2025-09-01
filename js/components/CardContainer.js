@@ -1,12 +1,16 @@
+import { animate } from 'animejs';
+
 export class CardContainer extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    this.state = [];
+    this.draggedCard = null;
     this.render();
   }
   
   static get observedAttributes() {
-    return ['title', 'gap', 'bg-color', 'padding', 'direction'];
+    return ['title', 'gap', 'bg-color', 'padding', 'direction', 'slot-width', 'slot-height'];
   }
   
   attributeChangedCallback(name, oldValue, newValue) {
@@ -17,6 +21,212 @@ export class CardContainer extends HTMLElement {
   
   connectedCallback() {
     this.render();
+    // Wait for next frame to ensure DOM is ready
+    requestAnimationFrame(() => {
+      this.initializeState();
+      this.setupDragAndDrop();
+    });
+  }
+  
+  initializeState() {
+    const slots = this.querySelectorAll('card-slot');
+    const gap = parseInt(this.getAttribute('gap') || '16');
+    const slotWidth = parseInt(this.getAttribute('slot-width') || '64');
+    
+    this.state = Array.from(slots).map((slot, index) => {
+      const card = slot.querySelector('card-element');
+      const x = index * (slotWidth + gap);
+      const y = 0;
+      
+      // Set slot position
+      slot.style.position = 'absolute';
+      slot.style.left = `${x}px`;
+      slot.style.top = `${y}px`;
+      slot.setAttribute('data-x', x);
+      slot.setAttribute('data-y', y);
+      slot.setAttribute('data-index', index);
+      
+      // Position card if exists
+      if (card) {
+        // Move card out of slot and position absolutely
+        this.appendChild(card);
+        card.style.position = 'absolute';
+        card.style.left = `${x}px`;
+        card.style.top = `${y}px`;
+        card.style.zIndex = '10';
+        card.setAttribute('data-slot-index', index);
+        card.setAttribute('data-original-x', x);
+        card.setAttribute('data-original-y', y);
+      }
+      
+      return {
+        slot: `slot-${index}`,
+        card: card ? card.id : null,
+        x: x,
+        y: y
+      };
+    });
+  }
+  
+  setupDragAndDrop() {
+    const cards = this.querySelectorAll('card-element');
+    
+    cards.forEach(card => {
+      let isDragging = false;
+      let startX = 0;
+      let startY = 0;
+      let initialX = 0;
+      let initialY = 0;
+      
+      const handleMouseDown = (e) => {
+        isDragging = true;
+        card.style.zIndex = '1000';
+        card.style.cursor = 'grabbing';
+        
+        // Get initial positions
+        const rect = card.getBoundingClientRect();
+        const containerRect = this.getBoundingClientRect();
+        initialX = rect.left - containerRect.left;
+        initialY = rect.top - containerRect.top;
+        
+        startX = e.clientX - initialX;
+        startY = e.clientY - initialY;
+        
+        // Add visual feedback to slots
+        this.querySelectorAll('card-slot').forEach(slot => {
+          slot.classList.add('drop-ready');
+        });
+        
+        e.preventDefault();
+      };
+      
+      const handleMouseMove = (e) => {
+        if (!isDragging) return;
+        
+        const x = e.clientX - startX;
+        const y = e.clientY - startY;
+        
+        card.style.left = `${x}px`;
+        card.style.top = `${y}px`;
+      };
+      
+      const handleMouseUp = (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        card.style.cursor = 'move';
+        card.style.zIndex = '10';
+        
+        // Remove visual feedback
+        this.querySelectorAll('card-slot').forEach(slot => {
+          slot.classList.remove('drop-ready');
+        });
+        
+        // Find nearest slot
+        const rect = card.getBoundingClientRect();
+        const containerRect = this.getBoundingClientRect();
+        const cardCenterX = rect.left + rect.width / 2 - containerRect.left;
+        const cardCenterY = rect.top + rect.height / 2 - containerRect.top;
+        
+        let nearestSlot = null;
+        let minDistance = Infinity;
+        
+        this.state.forEach((slotState, index) => {
+          const slotCenterX = slotState.x + 32; // half of slot width
+          const slotCenterY = slotState.y + 55; // half of slot height
+          const distance = Math.sqrt(
+            Math.pow(cardCenterX - slotCenterX, 2) + 
+            Math.pow(cardCenterY - slotCenterY, 2)
+          );
+          
+          if (distance < minDistance) {
+            minDistance = distance;
+            nearestSlot = index;
+          }
+        });
+        
+        // Perform swap if needed
+        this.handleCardDrop(card, nearestSlot);
+      };
+      
+      card.addEventListener('mousedown', handleMouseDown);
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      
+      // Touch support
+      card.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        handleMouseDown({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => e.preventDefault() });
+      });
+      
+      document.addEventListener('touchmove', (e) => {
+        const touch = e.touches[0];
+        handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
+      });
+      
+      document.addEventListener('touchend', (e) => {
+        handleMouseUp(e);
+      });
+    });
+  }
+  
+  handleCardDrop(card, targetSlotIndex) {
+    const cardId = card.id;
+    const currentSlotIndex = parseInt(card.getAttribute('data-slot-index'));
+    
+    if (currentSlotIndex === targetSlotIndex) {
+      // Snap back to same position
+      animate(card, {
+        left: this.state[targetSlotIndex].x,
+        top: this.state[targetSlotIndex].y,
+        duration: 300,
+        ease: 'outCubic'
+      });
+      return;
+    }
+    
+    // Check if target slot has a card
+    const targetCard = this.state[targetSlotIndex].card;
+    
+    if (targetCard) {
+      // Swap cards
+      const otherCard = this.querySelector(`#${targetCard}`);
+      
+      // Update state
+      this.state[currentSlotIndex].card = targetCard;
+      this.state[targetSlotIndex].card = cardId;
+      
+      // Animate both cards
+      animate(card, {
+        left: this.state[targetSlotIndex].x,
+        top: this.state[targetSlotIndex].y,
+        duration: 300,
+        ease: 'outCubic'
+      });
+      
+      animate(otherCard, {
+        left: this.state[currentSlotIndex].x,
+        top: this.state[currentSlotIndex].y,
+        duration: 300,
+        ease: 'outCubic'
+      });
+      
+      // Update slot indices
+      card.setAttribute('data-slot-index', targetSlotIndex);
+      otherCard.setAttribute('data-slot-index', currentSlotIndex);
+    } else {
+      // Move to empty slot
+      this.state[currentSlotIndex].card = null;
+      this.state[targetSlotIndex].card = cardId;
+      
+      animate(card, {
+        left: this.state[targetSlotIndex].x,
+        top: this.state[targetSlotIndex].y,
+        duration: 300,
+        ease: 'outCubic'
+      });
+      
+      card.setAttribute('data-slot-index', targetSlotIndex);
+    }
   }
   
   render() {
@@ -24,7 +234,7 @@ export class CardContainer extends HTMLElement {
     const gap = this.getAttribute('gap') || '16px';
     const bgColor = this.getAttribute('bg-color') || '#f7fafc';
     const padding = this.getAttribute('padding') || '20px';
-    const direction = this.getAttribute('direction') || 'row';
+    const slotHeight = this.getAttribute('slot-height') || '110px';
     
     this.shadowRoot.innerHTML = `
       <style>
@@ -34,15 +244,13 @@ export class CardContainer extends HTMLElement {
           background-color: ${bgColor};
           border-radius: 12px;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          position: relative;
         }
         
         .container {
-          display: flex;
-          gap: ${gap};
-          justify-content: center;
-          align-items: center;
-          flex-wrap: wrap;
-          flex-direction: ${direction};
+          position: relative;
+          min-height: calc(${slotHeight} + 20px);
+          width: 100%;
         }
         
         .title {
@@ -59,7 +267,18 @@ export class CardContainer extends HTMLElement {
         }
         
         ::slotted(card-slot) {
-          flex-shrink: 0;
+          position: absolute !important;
+        }
+        
+        ::slotted(card-element) {
+          position: absolute !important;
+          cursor: move;
+          user-select: none;
+          -webkit-user-select: none;
+        }
+        
+        ::slotted(card-element:active) {
+          cursor: grabbing;
         }
       </style>
       ${title ? `<h2 class="title">${title}</h2>` : ''}

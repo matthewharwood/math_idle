@@ -13,4 +13,9 @@ export default {
     clean: true,
     filename: './js/app.js',
   },
+  resolve: {
+    alias: {
+      'animejs': path.resolve(__dirname, 'node_modules/animejs/lib/anime.esm.js')
+    }
+  }
 };
