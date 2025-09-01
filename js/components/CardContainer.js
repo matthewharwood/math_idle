@@ -84,6 +84,17 @@ export class CardContainer extends HTMLElement {
       let velocityY = 0;
       
       const handleMouseDown = (e) => {
+        // Cancel any ongoing animations on all cards
+        this.querySelectorAll('card-element').forEach(c => {
+          c.removeAttribute('drop-success');
+          c.removeAttribute('swap-target');
+          if (c === card) {
+            c.style.animation = 'none';
+            // Force a reflow to ensure animation is cancelled
+            void c.offsetHeight;
+          }
+        });
+        
         isDragging = true;
         card.style.zIndex = '1000';
         card.style.cursor = 'grabbing';
@@ -213,6 +224,9 @@ export class CardContainer extends HTMLElement {
           this.style.perspective = '';
           this.style.transition = '';
         }, 500);
+        
+        // Re-enable animations on card after drag
+        card.style.animation = '';
         
         // Clear swap target
         this.querySelectorAll('card-element[swap-target]').forEach(c => {
