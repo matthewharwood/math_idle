@@ -19,7 +19,7 @@ async function initDB() {
 // Game state object structure
 export const Game = {
   cards: [],        // Array of card objects with {id, value, slotIndex}
-  score: 0,         // Current game score
+  coins: 0,         // Current game coins (renamed from score)
   level: 1,         // Current game level (now represents enemy level)
   cardCount: 5,     // Number of cards (difficulty)
   numberRange: 10,  // Maximum number range
@@ -112,7 +112,7 @@ export function createNewGameState(cardValues, cardCount = 5, numberRange = 10) 
       slotIndex: index,
       originalIndex: index
     })),
-    score: 0,
+    coins: 0,
     level: 1,
     cardCount: cardCount,
     numberRange: numberRange,

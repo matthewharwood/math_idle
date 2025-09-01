@@ -57,8 +57,14 @@ export class Enemy extends HTMLElement {
       // New enemy - reset to full health
       this.currentEnemy = { ...enemy };
       this.currentHealth = enemy.health;
+      console.log(`Loading new enemy: ${enemy.name} (Level ${enemy.level}) with full health`);
+    } else {
+      // Same enemy - update enemy data but preserve current health
+      const preservedHealth = this.currentHealth;
+      this.currentEnemy = { ...enemy };
+      this.currentHealth = preservedHealth;
+      console.log(`Preserving enemy health: ${this.currentEnemy.name} with ${this.currentHealth}/${this.currentEnemy.health} HP`);
     }
-    // If same enemy, keep current health (don't reset)
 
     this.updateDisplay();
   }

@@ -126,15 +126,15 @@ class GameManager {
     return this.currentState;
   }
 
-  // Update score
-  async updateScore(points) {
+  // Update coins
+  async updateCoins(amount) {
     if (!this.currentState) return;
     
-    this.currentState.score += points;
+    this.currentState.coins += amount;
     await saveGameState(this.currentState);
     
-    console.log('Score updated:', this.currentState.score);
-    return this.currentState.score;
+    console.log('Coins updated:', this.currentState.coins);
+    return this.currentState.coins;
   }
 
   // Update level
@@ -200,12 +200,12 @@ class GameManager {
       const cardValues = numberGenerator();
       
       // Preserve current game state
-      const currentScore = this.currentState.score;
+      const currentCoins = this.currentState.coins;
       const currentLevel = this.currentState.level;
       const currentEnemy = this.currentState.enemy;
       
       this.currentState = createNewGameState(cardValues, cardCount, numberRange);
-      this.currentState.score = currentScore;
+      this.currentState.coins = currentCoins;
       this.currentState.level = currentLevel;
       this.currentState.enemy = currentEnemy;
       
@@ -242,8 +242,8 @@ class GameManager {
   async updateDifficulty(cardCount, numberRange) {
     if (!this.currentState) return;
     
-    // Store current score and level
-    const currentScore = this.currentState.score;
+    // Store current coins and level
+    const currentCoins = this.currentState.coins;
     const currentLevel = this.currentState.level;
     
     // Generate new cards with new difficulty
@@ -251,7 +251,7 @@ class GameManager {
     const cardValues = numberGenerator();
     
     this.currentState = createNewGameState(cardValues, cardCount, numberRange);
-    this.currentState.score = currentScore; // Preserve score
+    this.currentState.coins = currentCoins; // Preserve coins
     this.currentState.level = currentLevel; // Preserve level
     
     await saveGameState(this.currentState);
@@ -349,8 +349,8 @@ class GameManager {
     if (!this.currentState?.enemy) return;
     
     const reward = this.currentState.enemy.enemy.reward;
-    this.currentState.score += reward;
-    console.log(`Enemy defeated! Earned ${reward} points`);
+    this.currentState.coins += reward;
+    console.log(`Enemy defeated! Earned ${reward} coins`);
   }
 
   /**

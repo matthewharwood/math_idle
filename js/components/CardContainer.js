@@ -371,6 +371,9 @@ export class CardContainer extends HTMLElement {
       
       // Dispatch winning event after animations start
       setTimeout(() => {
+        // Start coin animation before dispatching event
+        this.animateCoinsToToolbar(values);
+        
         this.dispatchEvent(new CustomEvent('containerWon', {
           detail: {
             values: values,
@@ -509,6 +512,100 @@ export class CardContainer extends HTMLElement {
         }, 320);
       }, index * 50); // Stagger by 50ms per card
     });
+  }
+  
+  animateCoinsToToolbar(values) {
+    // Calculate total coins earned from card values
+    const totalCoins = values.reduce((sum, value) => sum + value, 0);
+    const coinCount = Math.min(8, Math.max(3, Math.floor(totalCoins / 5))); // 3-8 coins based on total
+    
+    // Get positions
+    const containerRect = this.getBoundingClientRect();
+    let coinsDisplay = document.getElementById('coins-display');
+    
+    // If coins-display not found, try targeting the coins element directly
+    if (!coinsDisplay) {
+      coinsDisplay = document.getElementById('coins');
+      if (!coinsDisplay) {
+        console.error('Neither coins-display nor coins element found!');
+        return;
+      }
+    }
+    
+    const targetRect = coinsDisplay.getBoundingClientRect();
+    
+    // Log the target element for debugging
+    console.log('Target element:', coinsDisplay.id, 'at position:', targetRect);
+    
+    // Calculate center points
+    const startX = containerRect.left + containerRect.width / 2;
+    const startY = containerRect.top + containerRect.height / 2;
+    const endX = targetRect.left + targetRect.width / 2;
+    const endY = targetRect.top + targetRect.height / 2;
+    
+    console.log(`Coin animation: from (${startX}, ${startY}) to (${endX}, ${endY})`);
+    
+    // Create and animate coins
+    for (let i = 0; i < coinCount; i++) {
+      setTimeout(() => {
+        this.createAnimatedCoin(startX, startY, endX, endY, i);
+      }, i * 100); // Stagger coin creation
+    }
+  }
+  
+  createAnimatedCoin(startX, startY, endX, endY, index) {
+    // Create coin element
+    const coin = document.createElement('div');
+    coin.className = 'animated-coin';
+    coin.textContent = '🪙';
+    
+    // Add random spread at start
+    const spread = 40;
+    const randomX = startX + (Math.random() - 0.5) * spread;
+    const randomY = startY + (Math.random() - 0.5) * spread;
+    
+    coin.style.cssText = `
+      position: fixed;
+      font-size: 24px;
+      pointer-events: none;
+      z-index: 9999;
+      left: ${randomX}px;
+      top: ${randomY}px;
+      transform: translate(-50%, -50%);
+      transition: all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      opacity: 1;
+    `;
+    
+    document.body.appendChild(coin);
+    console.log(`Created coin at (${randomX}, ${randomY}), animating to (${endX}, ${endY})`);
+    
+    // Add floating animation
+    coin.style.animation = 'coinFloat 0.2s ease-out';
+    
+    // Animate to target after small delay
+    setTimeout(() => {
+      coin.style.left = `${endX}px`;
+      coin.style.top = `${endY}px`;
+      coin.style.transform = 'translate(-50%, -50%) scale(0.5)';
+      coin.style.opacity = '0';
+    }, 100);
+    
+    // Remove coin after animation
+    setTimeout(() => {
+      if (coin.parentNode) {
+        coin.parentNode.removeChild(coin);
+      }
+      
+      // Trigger coin count animation on last coin
+      if (index === 0) {
+        this.triggerCoinCountUpdate();
+      }
+    }, 1200);
+  }
+  
+  triggerCoinCountUpdate() {
+    // Dispatch custom event to trigger incremental counting
+    window.dispatchEvent(new CustomEvent('coinsAnimationComplete'));
   }
   
   render() {

@@ -26,8 +26,8 @@ async function initializeGame() {
     // Update the UI with the game state
     updateUIFromGameState(gameState);
     
-    // Update score display
-    updateScoreDisplay(gameState);
+    // Update coins display
+    updateCoinsDisplay(gameState);
     
     // Initialize enemy system
     initializeEnemySystem(gameState);
@@ -120,9 +120,9 @@ function setupCardSwapListeners() {
     // Handle win (deals damage to enemy)
     const result = await gameManager.handleWin();
     
-    // Update score and level display
+    // Update coins and level display
     const currentState = gameManager.getState();
-    updateScoreDisplay(currentState);
+    updateCoinsDisplay(currentState);
     
     // Save game state after damage/defeat
     await gameManager.saveGameState(currentState);
@@ -137,7 +137,7 @@ function setupCardSwapListeners() {
           await gameManager.newGame();
           const newState = gameManager.getState();
           updateUIFromGameState(newState);
-          updateScoreDisplay(newState);
+          updateCoinsDisplay(newState);
           updateDifficultyControls(newState);
           initializeEnemySystem(newState);
         }
@@ -162,7 +162,7 @@ function setupDifficultyControls(gameState) {
       
       const updatedState = await gameManager.updateDifficulty(cardCount, currentRange);
       updateUIFromGameState(updatedState);
-      updateScoreDisplay(updatedState);
+      updateCoinsDisplay(updatedState);
     });
   }
   
@@ -177,7 +177,7 @@ function setupDifficultyControls(gameState) {
       
       const updatedState = await gameManager.updateDifficulty(currentCount, numberRange);
       updateUIFromGameState(updatedState);
-      updateScoreDisplay(updatedState);
+      updateCoinsDisplay(updatedState);
     });
   }
 }
@@ -257,19 +257,72 @@ function updateEnemyDisplay(enemyState, battleResult) {
   }
 }
 
-// Update score and level display
-function updateScoreDisplay(gameState) {
+// Update coins and level display
+function updateCoinsDisplay(gameState) {
   if (!gameState) return;
   
-  const scoreEl = document.getElementById('score');
+  const coinsEl = document.getElementById('coins');
   const levelEl = document.getElementById('level');
-  const drawerScoreEl = document.getElementById('drawer-score');
+  const drawerCoinsEl = document.getElementById('drawer-coins');
   const drawerLevelEl = document.getElementById('drawer-level');
   
-  if (scoreEl) scoreEl.textContent = gameState.score || 0;
+  if (coinsEl) coinsEl.textContent = gameState.coins || 0;
   if (levelEl) levelEl.textContent = gameState.level || 1;
-  if (drawerScoreEl) drawerScoreEl.textContent = gameState.score || 0;
+  if (drawerCoinsEl) drawerCoinsEl.textContent = gameState.coins || 0;
   if (drawerLevelEl) drawerLevelEl.textContent = gameState.level || 1;
+}
+
+// Listen for coin animation completion to trigger incremental counting
+window.addEventListener('coinsAnimationComplete', () => {
+  const currentState = gameManager.getState();
+  if (currentState) {
+    animateCoinsIncrement(currentState.coins);
+  }
+});
+
+// Animate coin count incrementally
+function animateCoinsIncrement(targetCoins) {
+  const coinsEl = document.getElementById('coins');
+  const drawerCoinsEl = document.getElementById('drawer-coins');
+  
+  if (!coinsEl && !drawerCoinsEl) return;
+  
+  const startCoins = parseInt(coinsEl?.textContent || drawerCoinsEl?.textContent || '0');
+  const coinDiff = targetCoins - startCoins;
+  
+  if (coinDiff <= 0) return; // No change needed
+  
+  const duration = Math.min(1000, Math.max(300, coinDiff * 20)); // 20ms per coin, min 300ms, max 1s
+  const steps = Math.min(coinDiff, 50); // Max 50 steps for smooth animation
+  const increment = coinDiff / steps;
+  const stepDuration = duration / steps;
+  
+  let currentStep = 0;
+  
+  const animate = () => {
+    currentStep++;
+    const currentValue = Math.floor(startCoins + (increment * currentStep));
+    const displayValue = Math.min(currentValue, targetCoins);
+    
+    if (coinsEl) coinsEl.textContent = displayValue;
+    if (drawerCoinsEl) drawerCoinsEl.textContent = displayValue;
+    
+    // Add pulse effect on the coin display
+    const coinsDisplay = document.getElementById('coins-display');
+    if (coinsDisplay) {
+      coinsDisplay.style.transform = 'scale(1.1)';
+      coinsDisplay.style.transition = 'transform 0.1s ease';
+      setTimeout(() => {
+        coinsDisplay.style.transform = 'scale(1)';
+      }, 100);
+    }
+    
+    if (currentStep < steps && displayValue < targetCoins) {
+      setTimeout(animate, stepDuration);
+    }
+  };
+  
+  animate();
 }
 
 // Listen for game state updates
@@ -283,14 +336,15 @@ window.addEventListener('gameStateUpdated', (event) => {
   }
   
   updateUIFromGameState(gameState);
-  updateScoreDisplay(gameState);
+  updateCoinsDisplay(gameState);
   updateDifficultyControls(gameState);
   
   // Update enemy display
   const enemyComponent = document.querySelector('game-enemy');
   if (enemyComponent && gameState.enemy) {
+    // Set level first, then restore state to preserve health
+    enemyComponent.setLevel(gameState.level, false);
     enemyComponent.setState(gameState.enemy);
-    enemyComponent.setLevel(gameState.level);
   }
   
   // Animate new cards entering
