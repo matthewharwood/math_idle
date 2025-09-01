@@ -296,14 +296,17 @@ class GameManager {
     if (!this.currentState) return;
     
     const enemy = this.getEnemyByLevel(this.currentState.level);
-    if (!enemy) return;
+    if (!enemy) {
+      console.error(`No enemy found for level ${this.currentState.level}`);
+      return;
+    }
     
     this.currentState.enemy = {
       enemy: { ...enemy },
       currentHealth: enemy.health
     };
     
-    console.log(`Initialized enemy: ${enemy.name} (Level ${enemy.level})`);
+    console.log(`Initialized enemy: ${enemy.name} (Level ${enemy.level}) for player level ${this.currentState.level}`);
   }
 
   /**

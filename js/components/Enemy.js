@@ -326,10 +326,15 @@ export class Enemy extends HTMLElement {
    */
   setState(state) {
     if (state && state.enemy) {
-      this.currentEnemy = state.enemy;
+      // Deep copy the enemy data to ensure we have all properties
+      this.currentEnemy = { ...state.enemy };
       this.currentHealth = state.currentHealth;
+      
+      // Set the level attribute to match the enemy's level
+      this.setAttribute('level', this.currentEnemy.level);
+      
       this.updateDisplay();
-      console.log(`Enemy state restored: ${this.currentEnemy.name} with ${this.currentHealth}/${this.currentEnemy.health} HP`);
+      console.log(`Enemy state restored: ${this.currentEnemy.name} (Level ${this.currentEnemy.level}) with ${this.currentHealth}/${this.currentEnemy.health} HP`);
     }
   }
 

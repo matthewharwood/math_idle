@@ -208,14 +208,13 @@ function initializeEnemySystem(gameState) {
   if (!gameState.enemy) {
     gameManager.initializeEnemy();
     gameManager.updateEnemyComponent();
+    // Set enemy level (but don't animate on initial load)
+    enemyComponent.setLevel(gameState.level, false);
   } else {
-    // Restore enemy state with current health
+    // Restore enemy state with current health (setState handles level setting internally)
     enemyComponent.setState(gameState.enemy);
     console.log(`Restored enemy: ${gameState.enemy.enemy.name} with ${gameState.enemy.currentHealth}/${gameState.enemy.enemy.health} HP`);
   }
-  
-  // Set enemy level (but don't animate on initial load)
-  enemyComponent.setLevel(gameState.level, false);
   
   // Listen for enemy defeat events
   enemyComponent.addEventListener('enemy-defeated', async (event) => {

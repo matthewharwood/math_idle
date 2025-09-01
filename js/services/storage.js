@@ -44,6 +44,14 @@ export async function saveGameState(gameState) {
     await tx.complete;
     
     console.log('Game state saved:', stateToSave);
+    if (stateToSave.enemy) {
+      console.log('Enemy data saved:', {
+        enemyLevel: stateToSave.enemy.enemy.level,
+        enemyName: stateToSave.enemy.enemy.name,
+        currentHealth: stateToSave.enemy.currentHealth,
+        maxHealth: stateToSave.enemy.enemy.health
+      });
+    }
     return true;
   } catch (error) {
     console.error('Error saving game state:', error);
@@ -62,6 +70,14 @@ export async function loadGameState() {
     
     if (gameState) {
       console.log('Game state loaded:', gameState);
+      if (gameState.enemy) {
+        console.log('Enemy data loaded:', {
+          enemyLevel: gameState.enemy.enemy?.level,
+          enemyName: gameState.enemy.enemy?.name,
+          currentHealth: gameState.enemy.currentHealth,
+          maxHealth: gameState.enemy.enemy?.health
+        });
+      }
       return gameState;
     }
     
