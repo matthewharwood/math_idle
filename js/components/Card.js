@@ -6,7 +6,7 @@ export class Card extends HTMLElement {
   }
   
   static get observedAttributes() {
-    return ['label', 'card-type', 'data-slot-index', 'dragging', 'snap-preview', 'drop-success'];
+    return ['label', 'card-type', 'data-slot-index', 'dragging', 'snap-preview', 'drop-success', 'swap-target'];
   }
   
   attributeChangedCallback(name, oldValue, newValue) {
@@ -83,6 +83,23 @@ export class Card extends HTMLElement {
           transform: scale(1.02);
           box-shadow: var(--shadow), 0 0 0 2px var(--success);
           transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+        }
+        
+        /* Swap target preview - shows which card will be swapped */
+        :host([swap-target]) {
+          animation: swapPulse 0.5s ease-in-out infinite;
+          box-shadow: var(--shadow-lg), 0 0 0 3px var(--accent-light);
+        }
+        
+        @keyframes swapPulse {
+          0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+          50% {
+            transform: scale(0.95);
+            opacity: 0.8;
+          }
         }
         
         /* Drop success - bounce animation */
@@ -162,29 +179,12 @@ export class Card extends HTMLElement {
           fill: white;
         }
         
-        /* Shine effect */
+        /* Remove shine effect for flat design */
         .card-shine {
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(255, 255, 255, 0.1),
-            transparent
-          );
-          transition: left 0.5s ease;
-          pointer-events: none;
-        }
-        
-        :host(:hover) .card-shine {
-          left: 100%;
+          display: none;
         }
       </style>
       <div class="card-inner">
-        <div class="card-shine"></div>
         <div class="card-label">
           <slot>${label}</slot>
         </div>

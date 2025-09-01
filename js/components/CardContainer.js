@@ -89,15 +89,18 @@ export class CardContainer extends HTMLElement {
         card.style.cursor = 'grabbing';
         card.setAttribute('dragging', '');
         
-        // Get current card position
+        // Get current card position relative to container
         const rect = card.getBoundingClientRect();
         const containerRect = this.getBoundingClientRect();
-        const currentX = rect.left - containerRect.left;
-        const currentY = rect.top - containerRect.top;
         
-        // Calculate offset from click point to card top-left
-        startX = e.clientX - currentX;
-        startY = e.clientY - currentY;
+        // Store initial card position
+        initialX = rect.left - containerRect.left;
+        initialY = rect.top - containerRect.top;
+        
+        // Calculate offset from where user clicked to card's current position
+        // This maintains the click point relative to the card
+        startX = e.clientX - initialX;
+        startY = e.clientY - initialY;
         lastX = e.clientX;
         lastY = e.clientY;
         
@@ -128,7 +131,7 @@ export class CardContainer extends HTMLElement {
         card.style.left = `${x}px`;
         card.style.top = `${y}px`;
         
-        // Check for snap preview
+        // Check for snap preview and swap target
         const rect = card.getBoundingClientRect();
         const containerRect = this.getBoundingClientRect();
         const cardCenterX = rect.left + rect.width / 2 - containerRect.left;
@@ -151,9 +154,23 @@ export class CardContainer extends HTMLElement {
           }
         });
         
-        // Show snap preview if close enough
+        // Clear previous swap target
+        this.querySelectorAll('card-element[swap-target]').forEach(c => {
+          c.removeAttribute('swap-target');
+        });
+        
+        // Show snap preview and swap target if close enough
         if (minDistance < 50) {
           card.setAttribute('snap-preview', '');
+          
+          // Highlight the card that will be swapped
+          const targetCardId = this.state[nearestSlot].card;
+          if (targetCardId && targetCardId !== card.id) {
+            const targetCard = this.querySelector(`#${targetCardId}`);
+            if (targetCard) {
+              targetCard.setAttribute('swap-target', '');
+            }
+          }
         } else {
           card.removeAttribute('snap-preview');
         }
@@ -167,6 +184,11 @@ export class CardContainer extends HTMLElement {
         card.removeAttribute('dragging');
         card.removeAttribute('snap-preview');
         card.style.removeProperty('--drag-rotation');
+        
+        // Clear swap target
+        this.querySelectorAll('card-element[swap-target]').forEach(c => {
+          c.removeAttribute('swap-target');
+        });
         
         // Remove visual feedback
         this.querySelectorAll('card-slot').forEach(slot => {
@@ -195,12 +217,6 @@ export class CardContainer extends HTMLElement {
             nearestSlot = index;
           }
         });
-        
-        // Add drop success animation
-        card.setAttribute('drop-success', '');
-        setTimeout(() => {
-          card.removeAttribute('drop-success');
-        }, 400);
         
         // Perform swap if needed
         this.handleCardDrop(card, nearestSlot);
@@ -289,19 +305,27 @@ export class CardContainer extends HTMLElement {
       this.state[currentSlotIndex].card = targetCard;
       this.state[targetSlotIndex].card = cardId;
       
-      // Animate both cards
+      // Animate both cards with bounce
       animate(card, {
         left: this.state[targetSlotIndex].x,
         top: this.state[targetSlotIndex].y,
         duration: 300,
-        ease: 'outCubic'
+        ease: 'outCubic',
+        complete: () => {
+          card.setAttribute('drop-success', '');
+          setTimeout(() => card.removeAttribute('drop-success'), 400);
+        }
       });
       
       animate(otherCard, {
         left: this.state[currentSlotIndex].x,
         top: this.state[currentSlotIndex].y,
         duration: 300,
-        ease: 'outCubic'
+        ease: 'outCubic',
+        complete: () => {
+          otherCard.setAttribute('drop-success', '');
+          setTimeout(() => otherCard.removeAttribute('drop-success'), 400);
+        }
       });
       
       // Update slot indices
@@ -316,7 +340,11 @@ export class CardContainer extends HTMLElement {
         left: this.state[targetSlotIndex].x,
         top: this.state[targetSlotIndex].y,
         duration: 300,
-        ease: 'outCubic'
+        ease: 'outCubic',
+        complete: () => {
+          card.setAttribute('drop-success', '');
+          setTimeout(() => card.removeAttribute('drop-success'), 400);
+        }
       });
       
       card.setAttribute('data-slot-index', targetSlotIndex);

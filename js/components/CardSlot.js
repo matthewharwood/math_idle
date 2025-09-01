@@ -48,6 +48,7 @@ export class CardSlot extends HTMLElement {
           transition: all 0.2s ease;
           pointer-events: none;
           background-color: var(--surface);
+          box-sizing: border-box;
         }
         
         /* Responsive sizing */
