@@ -1,4 +1,5 @@
 import { animate } from 'animejs';
+import { audioService } from '../services/audio.js';
 
 export class CardContainer extends HTMLElement {
   constructor() {
@@ -434,6 +435,8 @@ export class CardContainer extends HTMLElement {
         ease: 'outCubic',
         complete: () => {
           card.setAttribute('drop-success', '');
+          // Play click sound on successful drop
+          audioService.playSFX('click');
           setTimeout(() => card.removeAttribute('drop-success'), 400);
         }
       });
@@ -445,6 +448,8 @@ export class CardContainer extends HTMLElement {
         ease: 'outCubic',
         complete: () => {
           otherCard.setAttribute('drop-success', '');
+          // Play click sound on successful drop
+          audioService.playSFX('click');
           setTimeout(() => otherCard.removeAttribute('drop-success'), 400);
         }
       });
@@ -473,6 +478,8 @@ export class CardContainer extends HTMLElement {
         ease: 'outCubic',
         complete: () => {
           card.setAttribute('drop-success', '');
+          // Play click sound on successful drop
+          audioService.playSFX('click');
           setTimeout(() => card.removeAttribute('drop-success'), 400);
         }
       });
