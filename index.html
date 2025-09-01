@@ -25,23 +25,19 @@
 
 <body>
 
-  <!-- Card Container with 3 slots and cards -->
-  <card-container title="My Card Collection" gap="16" slot-width="64" slot-height="110">
-    <!-- Slot 1 with Card -->
-    <card-slot>
-      <card-element id="card-1" label="Card 1" card-type="default"></card-element>
-    </card-slot>
-    
-    <!-- Slot 2 with Card -->
-    <card-slot>
-      <card-element id="card-2" label="Card 2" card-type="default"></card-element>
-    </card-slot>
-    
-    <!-- Slot 3 with Card -->
-    <card-slot>
-      <card-element id="card-3" label="Card 3" card-type="default"></card-element>
-    </card-slot>
+  <!-- Card Container - will be populated by game state -->
+  <card-container title="Math Idle Game" gap="16" slot-width="64" slot-height="110">
+    <!-- Cards will be dynamically loaded from game state -->
   </card-container>
+  
+  <!-- Game Controls -->
+  <div class="game-controls">
+    <button id="new-game-btn" class="game-button">New Game</button>
+    <div class="game-info">
+      <span id="score-display">Score: <span id="score">0</span></span>
+      <span id="level-display">Level: <span id="level">1</span></span>
+    </div>
+  </div>
 
   <style>
     :root {
@@ -116,6 +112,55 @@
       max-width: 600px;
       width: 100%;
       margin: 0 auto;
+    }
+    
+    .game-controls {
+      margin-top: var(--space-8);
+      text-align: center;
+    }
+    
+    .game-button {
+      padding: var(--space-3) var(--space-6);
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .game-button:hover {
+      background: var(--accent-dark);
+      box-shadow: var(--shadow);
+      transform: translateY(-2px);
+    }
+    
+    .game-button:active {
+      transform: translateY(0);
+      box-shadow: var(--shadow-xs);
+    }
+    
+    .game-info {
+      margin-top: var(--space-4);
+      display: flex;
+      justify-content: center;
+      gap: var(--space-8);
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 18px;
+      color: var(--text);
+      font-weight: 600;
+    }
+    
+    .game-info span {
+      display: inline-block;
+    }
+    
+    #score, #level {
+      color: var(--accent);
+      font-weight: 700;
     }
     
     @media (max-width: 640px) {

@@ -374,6 +374,15 @@ export class CardContainer extends HTMLElement {
       // Update slot indices
       card.setAttribute('data-slot-index', targetSlotIndex);
       otherCard.setAttribute('data-slot-index', currentSlotIndex);
+      
+      // Dispatch swap event for game state management
+      this.dispatchEvent(new CustomEvent('cardSwapped', {
+        detail: {
+          card1Id: cardId,
+          card2Id: targetCard
+        },
+        bubbles: true
+      }));
     } else {
       // Move to empty slot
       this.state[currentSlotIndex].card = null;
@@ -391,6 +400,16 @@ export class CardContainer extends HTMLElement {
       });
       
       card.setAttribute('data-slot-index', targetSlotIndex);
+      
+      // Dispatch move event for game state management
+      this.dispatchEvent(new CustomEvent('cardMoved', {
+        detail: {
+          cardId: cardId,
+          fromSlot: currentSlotIndex,
+          toSlot: targetSlotIndex
+        },
+        bubbles: true
+      }));
     }
   }
   
